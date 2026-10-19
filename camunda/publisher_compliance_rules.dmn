@@ -4,17 +4,17 @@
     <decisionTable id="DecisionTable_PublisherComplianceRules" hitPolicy="FIRST">
       <input id="Input_ExceedsMax" label="Exceeds max word count">
         <inputExpression id="InputExpr_ExceedsMax" typeRef="boolean">
-          <text>wordCount &gt; [for t in thresholdsResult.body where t.rule_key = "max_word_count" return t.threshold_value][1]</text>
+          <text>wordCount &gt; thresholdsResult.body[rule_key = "max_word_count"][1].threshold_value</text>
         </inputExpression>
       </input>
       <input id="Input_BelowMin" label="Below min word count">
         <inputExpression id="InputExpr_BelowMin" typeRef="boolean">
-          <text>wordCount &lt; [for t in thresholdsResult.body where t.rule_key = "min_word_count" return t.threshold_value][1]</text>
+          <text>wordCount &lt; thresholdsResult.body[rule_key = "min_word_count"][1].threshold_value</text>
         </inputExpression>
       </input>
       <input id="Input_HasBanned" label="Contains banned terms">
         <inputExpression id="InputExpr_HasBanned" typeRef="boolean">
-          <text>count([for w in bannedWordsResult.body.word where contains(lower case(articleBody), w) return w]) &gt; 0</text>
+          <text>count(bannedWordsResult.body.word[contains(lower case(articleBody), item)]) &gt; 0</text>
         </inputExpression>
       </input>
       <input id="Input_HasHeadline" label="Headline present">
