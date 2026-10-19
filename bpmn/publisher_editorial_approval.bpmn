@@ -165,7 +165,6 @@
     </bpmn:eventBasedGateway>
     <bpmn:sequenceFlow id="Flow_Resubmitted" sourceRef="Gateway_Revision" targetRef="Event_Resubmitted" />
     <bpmn:intermediateCatchEvent id="Event_Resubmitted" name="Resubmission received">
-      <bpmn:extensionElements />
       <bpmn:incoming>Flow_Resubmitted</bpmn:incoming>
       <bpmn:outgoing>Flow_Resubmitted_Loop</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageDef_Resubmitted" messageRef="Message_PublisherResubmitted" />
@@ -183,7 +182,6 @@
     <bpmn:endEvent id="End_Abandoned" name="Abandoned">
       <bpmn:incoming>Flow_TimeoutAbandon</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Flow_Start_Placeholder_Unused" sourceRef="StartEvent_Submitted" targetRef="StartEvent_Submitted" />
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_PublisherEditorialApproval">
     <bpmndi:BPMNPlane id="BPMNPlane_PublisherEditorialApproval" bpmnElement="publisherEditorialApproval">
