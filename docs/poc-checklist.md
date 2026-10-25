@@ -8,9 +8,27 @@ Every item in the PoC brief, where this demo addresses it, and how sure we are. 
 - **Partial**: addressed with a deviation that must be stated in the written summary.
 - **Gap**: not addressed yet.
 
-**What has actually run live** (from the Supabase audit mirror, 25 Oct): 4 submissions, all on the clean path and all published, with 2 publish attempts each. That proved: start, Supabase lookups, DMN rules (pass), a single-call AI check (pass), a human approval, the failing-then-succeeding publish, and completion. **Nothing else has run live**: no rules failure, no AI failure, no human rejection, no notification, no resubmission, no timeout.
+**What has actually run on the cluster** (read from Operate and the Supabase record, 25 Oct)
+- **Version 3, single-call AI step:** 4 clean articles, each approved by an editor (two in Tasklist, with the user recorded as assignee) and published after 2 publish attempts.
+- **Version 5 and 6, with the compliance agent:**
+  - The agent ran: tool calls, structured verdict, the rule keys it checked. It failed the AI-check article with reasons and fixes and passed a clean article.
+  - A banned-term article failed the rules and went to revision.
+  - Revision requests with the agent's reasons reached the submitter's record, and the instance waited in the same place.
+  - Version 5 had a defect where resubmitted text was ignored. It was fixed in version 6.
+- **Proof on version 6** (instance `6755399441190489`, completed, no incident): the AI-check article failed the agent, revision round 1, resubmitted with the clean article, the process-level `articleBody` became the new text, the agent started a **fresh conversation** and passed it, an editor task was completed 16 seconds after creation, the publish retried (2 attempts) and the instance completed. That one instance shows loop-back, the fix, a fresh agent round, approval and retry in a single history.
+- **Not yet run:** the timeout to Abandoned, delegation, the API start script, a word-count failure, a missing-headline failure, a human rejection routing back, native Tasklist approval with the agent version, and the engine restart (the presenter owns that one).
 
-**Important: the AI step has since changed.** Those 4 runs used the earlier single-call AI task. It has been replaced by an AI Agent sub-process with tools (see "AI compliance agent" below), which has **not run on the cluster yet**. Treat the whole clean path as needing a fresh live run, not just the revision path.
+**One thing the live data shows about identity.** The version 6 approval task has **no assignee**, which is how a task completed straight through the API looks, so it was most likely completed from the custom Editor tasks page. That also confirms the page works against the real cluster. Approvals made in Tasklist record the person. The history would not show who approved the API-completed one.
+
+## What the customer said on the clarification call
+From the call transcript. It is an automatic transcription and unclear in places, so confirm anything important in writing.
+- **The demo is live** with the whole evaluation team, who record it themselves. The directors above them see the recording, so what is shown must make sense without the room.
+- **Priorities:** statefulness and human-in-the-loop first (functional), then AI and developer experience, then commercials.
+- **Everything can be synthetic.** Any article length, mock APIs, mock CMS. The intent is to focus on product capability, not to make the PoC heavy.
+- **Delegation:** a manager reassigning a task is enough for the demo. Pick one method to show. The written criteria should mention the other options (automated reassignment, escalation).
+- **Pause and resume of the cluster:** a recording appeared acceptable instead of doing it live. **Confirm in writing.**
+- **Timing:** they are targeting the end of October. Time slots for the live session are to be proposed.
+- **Procurement:** they lean towards buying direct, and how easy vendor onboarding is counts. Implementation partners are separate and they have their own.
 
 ## Scenario steps
 
@@ -18,23 +36,23 @@ Every item in the PoC brief, where this demo addresses it, and how sure we are. 
 |---|---|---|---|
 | 1 | Content submitted via a simple API call or form; plain text/JSON payload; no real CMS | Submit view (form) posts JSON to the app, which starts the process. `npm run api -- start` starts it directly through Camunda's REST API. | Form: verified live. API script: built, not run live |
 | 2 | Submission secured through the OAuth 2.0 client-credentials grant | The app server and `npm run api` both obtain a client-credentials token before calling Camunda. The browser-to-app route is not itself OAuth-protected. Show the script (token request, then start with a redacted bearer token) as the evidence. | Partial |
-| 3 | Automated compliance check as an AI/LLM step | AI Agent **sub-process** (ad-hoc, AI Agent connector v2) after the DMN rules: the model chooses between two read-only tools (banned terms, style guide by topic) in a loop bounded to 6 model calls, and returns a structured verdict. | Built, not run live (the earlier single-call task ran live) |
-| 4 | Basic rules: word count, banned words, missing headline. The brief's wording: "flags if the article **exceeds** a word count, contains a banned word list, or is missing a required field such as a headline" | DMN `publisherComplianceRules`: **maximum word count** (1,200, from the Supabase `compliance_thresholds` table), banned terms (Supabase list, case-insensitive) and headline present. Each has a way to demonstrate it: "Load revision test article" (banned term), "Load too-long test article" (1,358 words, over the maximum), and clearing the headline before submitting. **Not in the brief:** the DMN also enforces a *minimum* of 150 words, so a revision shorter than 150 words bounces with "below minimum word count". Keep it, or set `min_word_count` to 0 in `compliance_thresholds` to switch it off (data only, no redeploy). The DMN uses hit policy FIRST, so only the first failing rule is reported. | Pass verified live. Fail branches built, not run live |
+| 3 | Automated compliance check as an AI/LLM step | AI Agent **sub-process** (ad-hoc, AI Agent connector v2) after the DMN rules: the model chooses between two read-only tools (banned terms, style guide by topic) in a loop bounded to 6 model calls, and returns a structured verdict. | Verified live (version 6) |
+| 4 | Basic rules: word count, banned words, missing headline. The brief's wording: "flags if the article **exceeds** a word count, contains a banned word list, or is missing a required field such as a headline" | DMN `publisherComplianceRules`: **maximum word count** (1,200, from the Supabase `compliance_thresholds` table), banned terms (Supabase list, case-insensitive) and headline present. Each has a way to demonstrate it: "Load revision test article" (banned term), "Load too-long test article" (1,358 words, over the maximum), and clearing the headline before submitting. **Not in the brief:** the DMN has a minimum-word-count rule. It is switched off (`min_word_count` = 0 in `compliance_thresholds`) because the customer said on the clarification call that article length does not matter. The DMN uses hit policy FIRST, so only the first failing rule is reported. | Pass verified live. Banned-term failure verified live. Word-count and headline failures not run live |
 | 5 | LLM simulated via a simple API call (the customer's LLM Ops team exposes AI through APIs) | The agent calls Bedrock through the connector, not an LLM Ops style API. The v2 AI Agent template lists an OpenAI-compatible custom endpoint and a `custom` provider type, so pointing it at an internal gateway looks possible. That comes from the template file, not from a test: verify on the cluster before claiming it. | Partial |
-| 6 | Check fails: route to Revision Required | Rules fail or AI fail go to "Notify submitter" then the wait state. | Built, not run live |
+| 6 | Check fails: route to Revision Required | Rules fail or AI fail go to "Notify submitter" then the wait state. | Verified live (rules failure and AI failure) |
 | 7 | Check passes: continue to approval | Gateways to the editorial approval user task. | Verified live |
-| 8 | Revision Required: notify the submitter **with the reason** (email is fine) | HTTP stub writes a `notifications` row. The reason is shown to the submitter on the Submit view and in the Revisions list, and on the Admin view. Not real email (brief allows email; this is a stub). | Built, not run live. Partial (not email) |
-| 9 | Same process instance returns to a waiting-for-resubmission state, not a new submission | Event-based gateway waits for the `publisher-approval-resubmitted` message (correlation key `submissionId`). Prove it by showing the **same process instance key** before and after in Operate. See "Resubmission management" below. | Built, not run live |
-| 10 | Resubmission via a simple API call with revised content routes back to step 2 | `/api/resubmit`, the Revisions view, or `npm run api -- resubmit <id>`. Loops to the banned-word lookup. Only allowed while the submission is waiting for a revision, and only once per round. | Built, not run live |
+| 8 | Revision Required: notify the submitter **with the reason** (email is fine) | HTTP stub writes a `notifications` row. The reason is shown to the submitter on the Submit view and in the Revisions list, and on the Admin view. Not real email (brief allows email; this is a stub). | Verified live (reasons and fixes reach the submitter). Partial (not email) |
+| 9 | Same process instance returns to a waiting-for-resubmission state, not a new submission | Event-based gateway waits for the `publisher-approval-resubmitted` message (correlation key `submissionId`). Prove it by showing the **same process instance key** before and after in Operate. See "Resubmission management" below. | Verified live |
+| 10 | Resubmission via a simple API call with revised content routes back to step 2 | `/api/resubmit`, the Revisions view, or `npm run api -- resubmit <id>`. Loops to the banned-word lookup. Only allowed while the submission is waiting for a revision, and only once per round. | Verified live on version 6 (the new text is honoured) |
 | 11 | Optional: no resubmission within a defined time marks the instance Abandoned (24 h, simulated for demo) | Timer on the event-based gateway (default `PT24H`, overridable with the `revisionTimeout` variable). Compress with `npm run api -- start ... --revision-timeout PT2M`. The instance marks the submission abandoned in Supabase, then ends at the "Abandoned" end event. The app then shows Abandoned and refuses a late resubmission. | Built, not run live |
-| 12 | Human approval via a task interface; **note which approach is used** | Native Tasklist is primary. The custom Editor tasks view is an alternative. The written summary must say both. | Approval verified live |
+| 12 | Human approval via a task interface; **note which approach is used** | Native Tasklist is primary. The custom Editor tasks view is an alternative. The written summary must say both. | Verified live (Tasklist earlier; custom page on version 6) |
 | 13 | Pause from minutes to (simulated) days; state survives | The user task has no timer or timeout. The Editor tasks view shows "waiting since". Demonstrated for real by the resilience test. | Built, not run live |
 | 14 | Approver delegation: reassign a pending task to another user | Native in Tasklist (assign to another user). Needs two users in group `editors` and someone allowed to reassign. | Built, prerequisites unconfirmed |
 | 15 | Rejection routes back to Revision Required | Gateway "Approved?" default flow to "Notify submitter". The native form does **not** force a reason on reject (see BPMN changes below). The custom view does. | Built, not run live |
 | 16 | Approval proceeds to publish | Gateway to the publish task. | Verified live |
-| 17 | Mock publish fails first attempt (HTTP 500); automatic retry/backoff; succeeds later | Mock CMS fails attempt 1 per submission. Task has 3 retries and a 10 s backoff. | Verified live (2 attempts x 4) |
+| 17 | Mock publish fails first attempt (HTTP 500); automatic retry/backoff; succeeds later | Mock CMS fails attempt 1 per submission. Task has 3 retries and a 10 s backoff. | Verified live |
 | 18 | Process complete | End event "Published". | Verified live |
-| 19 | Full audit trail: every step, decision, timestamp, actor, **including the AI agent's input and output** | Operate shows steps and timestamps. Decisions are variables (`complianceResult`, `aiComplianceResult`, `approvalDecision`, `revisionReason`). The agent's whole conversation (prompts, tool calls, tool results, structured verdict) is kept in `aiComplianceResult.context` and `toolCallResults`. **To verify live:** that the conversation and tool calls are readable in Operate, and that the user-task completion shows the real user as actor. The Admin view shows status only, not the trail. | Partial, to verify |
+| 19 | Full audit trail: every step, decision, timestamp, actor, **including the AI agent's input and output** | Operate shows steps and timestamps. Decisions are variables (`complianceResult`, `aiComplianceResult`, `approvalDecision`, `revisionReason`). The agent's whole conversation (prompts, tool calls, tool results, structured verdict) is kept in `aiComplianceResult.context` and `toolCallResults`. **To verify live:** that the conversation and tool calls are readable in Operate, and that the user-task completion shows the real user as actor. The Admin view shows status only, not the trail. | Partial. Agent conversation, tool calls and verdict visible in Operate. Actor recorded for Tasklist approvals, empty for API-completed ones |
 
 ## Required resilience test
 
@@ -52,12 +70,12 @@ Options to close the gap (a decision is needed):
 | Capability | Where it is shown | Status |
 |---|---|---|
 | Durable state persistence | Resilience test (item 20) | Gap |
-| Long-running / pause-resume | Human approval wait (items 12, 13) | Built, not run live |
-| Loop-back / re-entry within a single instance | Revision loop (items 9, 10); same instance key in Operate | Built, not run live |
+| Long-running / pause-resume | Human approval wait (items 12, 13) | Verified live for minutes. Days is by design, not run |
+| Loop-back / re-entry within a single instance | Revision loop (items 9, 10); same instance key in Operate | Verified live |
 | Error handling and retry | Publish fails once, retries with backoff (item 17) | Verified live |
-| Human-in-the-loop | Native Tasklist, plus the Editor tasks view (item 12) | Verified live (approval) |
-| Agents (AI/LLM) | AI Agent sub-process with tools in the process (item 3); the model decides which tools to call | Built, not run live |
-| Audit trail | Operate instance history and variables (item 19) | Partial, to verify |
+| Human-in-the-loop | Native Tasklist, plus the Editor tasks view (item 12) | Verified live |
+| Agents (AI/LLM) | AI Agent sub-process with tools in the process (item 3); the model decides which tools to call | Verified live |
+| Audit trail | Operate instance history and variables (item 19) | Partial (see the identity note above) |
 | Event/API trigger | Form, `npm run api -- start` (items 1, 2) | Form verified live. Script not run live |
 
 ## Resubmission management
@@ -73,11 +91,9 @@ Options to close the gap (a decision is needed):
 
 **Submitter experience.** Submitting and revising are separate. The Submit view is only the submission form plus a progress card for the latest submission. The Revisions view is a clean list of articles waiting for a revision, each with its round, a one-line reason and a Revise button. Revise opens the full reason (the agent's findings and suggested fixes) and an editor with the last saved text, and Resubmit continues the same instance. Article text is stored with the submission for this.
 
-**Verify on the cluster** (none of this has run live)
-1. Resubmit a waiting instance **with different text**: the same instance key loops back, the process variable `articleBody` at process level is the new text, the agent runs again on the new text, and the second round's conversation in `aiComplianceResult.context` does not contain the first article. (To prove the text really changed, resubmit the clean article into a failed AI-check instance: it should now pass.)
-2. `revisionRound` is 1 after the first loop and the previous round's results are gone.
-3. Start with `--revision-timeout PT2M`, wait, and confirm the instance ends at Abandoned, the app shows Abandoned, and a resubmit is refused.
-4. Double-clicking "Resubmit revised article" produces one loop, not two.
+**Verified on the cluster (version 6):** resubmitting with different text loops the same instance back, the process-level `articleBody` becomes the new text, the agent's second conversation holds only the new article, `revisionRound` counts the round, and the previous round's results are cleared.
+
+**Still to run:** the timeout (start with `--revision-timeout PT2M`, wait, and confirm the instance ends at Abandoned, the app shows Abandoned and a resubmit is refused), and a double click on "Resubmit revised article" producing one loop and not two.
 
 **Instances already running keep the process version they started on.** Anything started before a BPMN version is deployed keeps that version's behaviour. Version 5 has the dropped-payload bug above, so a version 5 instance accepts a resubmission but keeps re-checking its original text. Start new instances after deploying the fix, or migrate waiting version 5 instances to the fixed version in Operate before resubmitting.
 
@@ -96,13 +112,9 @@ Governance points to say out loud:
 - The full conversation is kept with the instance for audit, and the structured verdict names the rules the agent actually checked.
 - Temperature is 0 and output length is capped.
 
-**Verify on the cluster before recording** (none of this has run live):
-1. The v2 connector is available. After starting an instance that passes the rules, it must enter and leave the agent sub-process. If it sits in the sub-process with no job activity, the cluster's connectors runtime probably lacks the v2 job type `io.camunda.agenticai:aiagent:subprocess:2`. The fallback is the deprecated v1 sub-process (template `io.camunda.connectors.agenticai.aiagent.jobworker.v1` version 13, which also runs on 8.10).
-2. The Bedrock model id (`au.anthropic.claude-sonnet-4-5-20250929-v1:0`), region (`ap-southeast-2`) and the two secrets are valid. Prompt caching is switched off so an unsupported model feature cannot fail the call. Bedrock needs the JSON schema, which is set.
-3. In Operate the agent makes tool calls (see `toolCallResults`) and returns a verdict.
-4. `docs/samples/clean-article.txt` passes, `docs/samples/ai-check-article.txt` fails with reasons that cite style rules (and passes the DMN rules first), and `docs/samples/injection-article.txt` fails.
-5. The submitter sees the reasons and suggested fixes, and a resubmission loops in the same instance.
-6. The clean path still reaches approval and publishes.
+**Verified on the cluster:** the version 2 connector is available; the Bedrock model, region and secrets work; the agent calls its tools and returns a structured verdict; the clean article passes and the AI-check article fails with reasons that cite style rules; the submitter sees the reasons and suggested fixes; a resubmission loops in the same instance; the clean path publishes.
+
+**Still to run:** the prompt-injection sample (`docs/samples/injection-article.txt`) should fail; run it before the session and only show it if it behaves.
 
 ## Deliverables
 

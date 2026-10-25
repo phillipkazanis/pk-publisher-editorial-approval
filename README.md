@@ -17,7 +17,8 @@ Camunda 8 demo: editorial content approval with AI compliance check, human appro
 | `pages/index.js` | **Submit** view: just the submission form, with a progress card for the latest submission |
 | `pages/revisions.js` | **Revisions** view: a list of articles waiting for a revision; Revise opens an editor and Resubmit continues the same instance |
 | `pages/tasks.js`, `pages/api/tasks/` | **Editor tasks** view: open approval tasks with Approve and Reject (calls the Camunda REST API) |
-| `pages/admin.js`, `pages/api/admin/submissions.js` | **Admin** view: read-only table of submissions from Supabase |
+| `pages/admin.js`, `pages/api/admin/submissions.js`, `pages/api/admin/metrics.js`, `lib/metrics.js` | **Admin** view: a KPI strip (first-pass rate, revision rounds, time to publish, retries, abandonment) and a read-only table of submissions, from Supabase |
+| `pages/api/llm-ops/compliance-check.js` | A deterministic stand-in for the AI service in the contract below; can simulate outages |
 | `pages/api/submission-status.js` | Read-only: returns a submission's status for the status tracker |
 | `pages/api/start-process.js` | Starts a process instance (calls the Camunda cluster) |
 | `pages/api/resubmit.js` | Resubmits into the same instance: only while the submission is waiting for a revision, once per round, by publishing the `publisher-approval-resubmitted` message (calls the Camunda cluster) |
@@ -29,6 +30,8 @@ Camunda 8 demo: editorial content approval with AI compliance check, human appro
 | `scripts/smoke-test.mjs` | Local API smoke test |
 | `scripts/lint-camunda.mjs` | Lint for the files in `camunda/` |
 | `pages/api/brand/logo.js`, `scripts/upload-logo.mjs` | Serves the logo from a private Supabase Storage bucket, and the one-time upload script |
+| `docs/ai-compliance-contract.md`, `docs/ai-compliance-check.openapi.yaml` | The AI step as a governed service: the contract the process depends on, and how the agent and an AI service both fit behind it |
+| `docs/poc-written-summary.md`, `docs/criteria-crosswalk.md` | Draft written summary for the customer, and a map of the PoC against their 70 assessment criteria |
 | `docs/sql/style-rules.sql` | Style guide table and read-only view used by the compliance agent's tool (applied to Supabase; re-runnable) |
 | `scripts/camunda-api.mjs`, `docs/samples/` | Starts or resubmits an article straight through the Camunda REST API with an OAuth 2.0 client-credentials token (`npm run api`), and sample article texts for it |
 | `scripts/fake-camunda.mjs` | Tiny local stand-in for the few Camunda endpoints the Editor tasks view uses (not a real engine) |
@@ -46,7 +49,7 @@ A header nav switches between four views:
 - **Submit** (`/`): journalists submit an article. A progress card for the latest submission shows Submitted, In review and Published, with a revision-requested flag that links to Revisions.
 - **Revisions** (`/revisions`): articles sent back for a revised version, one row each with the round, a short reason and a Revise button. Revise opens the full reason and an editor with the last saved text; Resubmit continues the same process instance.
 - **Editor tasks** (`/tasks`): lists open `Editorial approval` tasks for the `editors` group, with the article and the rules and AI check results. Approve completes the task; Reject needs a reason and sends the article back for revision. It uses `POST /v2/user-tasks/search`, `.../{key}/effective-variables/search` and `.../{key}/completion`.
-- **Admin** (`/admin`): recent submissions with status, publish attempts, notification count and instance key, refreshed every few seconds. It complements Operate: for step-by-step history, variables and the AI input and output, open the instance in Operate.
+- **Admin** (`/admin`): a KPI strip (first-pass rate, average revision rounds, median time to publish, publish retries, abandonment, calculated from the app's record of each submission) and recent submissions with status, publish attempts, notification count and instance key, refreshed every few seconds. It complements Operate: for step-by-step history, variables and the AI input and output, open the instance in Operate.
 
 Things to know:
 
@@ -97,6 +100,12 @@ npm run api -- resubmit <submissionId> --title "SMOKE TEST - API start" --body-f
 ```
 
 It needs the `CAMUNDA_*` values and `MOCK_CMS_BASE_URL` in `.env.local`, prints each HTTP step with the bearer token redacted, and never prints the token or secret. `--revision-timeout` (an ISO duration such as `PT2M`) compresses the 24-hour abandon timer for a demo. It starts a **real** process instance on whatever cluster `.env.local` points at; try it against `npm run fake:camunda` first.
+
+To check the metrics calculation (pure function, no database or network):
+
+```
+npm run test:metrics
+```
 
 To lint the Camunda files (report only, nothing is modified; needs `xmllint`, which is built into macOS):
 
