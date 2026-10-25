@@ -446,6 +446,44 @@
   color: var(--muted);
 }
 
+/* Admin KPI strip */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 0 0 8px;
+}
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.kpiLabel {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+.kpiValue {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.kpiHint {
+  font-size: 12px;
+  color: var(--muted);
+}
+.kpiNote {
+  margin: 0 0 16px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
 /* Admin */
 .summary {
   display: flex;

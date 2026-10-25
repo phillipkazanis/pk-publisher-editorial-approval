@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import Layout from '../components/Layout';
+import { reasonPreview } from '../lib/reason';
 import styles from '../styles/App.module.css';
 
 const REFRESH_MS = 5000;
@@ -12,21 +13,39 @@ const STATUS_LABELS = {
   abandoned: 'Abandoned',
 };
 
+const pctText = (n) => (n == null ? '-' : `${n}%`);
+function durationText(minutes) {
+  if (minutes == null) return '-';
+  return minutes >= 120 ? `${Math.round(minutes / 6) / 10} h` : `${minutes} min`;
+}
+
+function Kpi({ label, value, hint }) {
+  return (
+    <div className={styles.kpi}>
+      <span className={styles.kpiLabel}>{label}</span>
+      <span className={styles.kpiValue}>{value}</span>
+      <span className={styles.kpiHint}>{hint}</span>
+    </div>
+  );
+}
+
 function when(iso) {
   return iso ? new Date(iso).toLocaleString('en-AU') : '';
 }
 
 export default function Admin() {
   const [rows, setRows] = useState(null);
+  const [metrics, setMetrics] = useState(null);
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
     try {
-      const r = await fetch('/api/admin/submissions');
+      const [r, m] = await Promise.all([fetch('/api/admin/submissions'), fetch('/api/admin/metrics')]);
       const j = await r.json();
       if (!r.ok) return setError(j.error || 'Could not load submissions.');
       setError('');
       setRows(j.submissions);
+      if (m.ok) setMetrics(await m.json());
     } catch {
       setError('Could not reach the app.');
     }
@@ -52,6 +71,20 @@ export default function Admin() {
         <p className={styles.notice} role="alert">
           {error}
         </p>
+      )}
+
+      {metrics && metrics.total > 0 && (
+        <section className={styles.kpis} aria-label="Key metrics">
+          <Kpi label="Articles" value={metrics.total} hint={`${metrics.published} published · ${metrics.awaitingRevision} awaiting revision · ${metrics.inReview} in review`} />
+          <Kpi label="First-pass rate" value={pctText(metrics.firstPassRatePct)} hint="Published with no revision request" />
+          <Kpi label="Avg revision rounds" value={metrics.avgRevisionRounds ?? '-'} hint={`${pctText(metrics.needingRevisionPct)} of articles needed revising`} />
+          <Kpi label="Median time to publish" value={durationText(metrics.medianMinutesToPublish)} hint="Includes time waiting for people" />
+          <Kpi label="Publish needed a retry" value={pctText(metrics.retriedBeforePublishPct)} hint="Recovered by the engine's retry" />
+          <Kpi label="Abandoned" value={pctText(metrics.abandonmentRatePct)} hint="No revision arrived in time" />
+        </section>
+      )}
+      {metrics && metrics.total > 0 && (
+        <p className={styles.kpiNote}>Calculated from this app's record of each submission. The engine's own history in Operate is the system of record.</p>
       )}
 
       {rows && (
@@ -88,7 +121,7 @@ export default function Admin() {
                       {r.title || '(no headline)'}
                       <div className={styles.mono}>{r.submissionId}</div>
                       {r.status === 'revision_requested' && r.lastNotification && (
-                        <div className={styles.taskMeta}>Revision reason: {r.lastNotification}</div>
+                        <div className={styles.taskMeta} title={r.lastNotification}>Revision reason: {reasonPreview(r.lastNotification)}</div>
                       )}
                     </td>
                     <td data-label="Status">

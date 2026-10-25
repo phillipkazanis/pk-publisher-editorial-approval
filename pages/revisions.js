@@ -1,16 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import Layout from '../components/Layout';
+import { reasonPreview } from '../lib/reason';
 import styles from '../styles/App.module.css';
 
 const REFRESH_MS = 6000;
-
-// The reason is the agent's findings, then "Suggested fixes: ...". For the list, show just the first finding.
-function preview(reason) {
-  const findings = (reason || '').split('Suggested fixes:')[0].split(/;\s+/).map((f) => f.trim().replace(/[.\s]+$/, '')).filter(Boolean);
-  if (!findings.length) return '';
-  const first = findings[0].length > 150 ? `${findings[0].slice(0, 147)}...` : findings[0];
-  return findings.length > 1 ? `${first} (+${findings.length - 1} more)` : first;
-}
 
 export default function Revisions() {
   const [items, setItems] = useState(null);
@@ -107,7 +100,7 @@ export default function Revisions() {
 
         {(items || []).map((item) => {
           const editing = openId === item.submissionId;
-          const summary = preview(item.reason);
+          const summary = reasonPreview(item.reason);
           return (
             <section key={item.submissionId} className={styles.card}>
               <div className={styles.itemHead}>

@@ -8,6 +8,7 @@
     "start": "next start",
     "smoke": "node --env-file-if-exists=.env.local scripts/smoke-test.mjs",
     "lint:camunda": "node scripts/lint-camunda.mjs",
+    "test:metrics": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/test-metrics.mjs",
     "fake:camunda": "node scripts/fake-camunda.mjs",
     "api": "node --env-file-if-exists=.env.local scripts/camunda-api.mjs",
     "upload:logo": "node --env-file-if-exists=.env.local scripts/upload-logo.mjs"
