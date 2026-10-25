@@ -148,6 +148,22 @@ if (bpmn) {
   for (const def of all(process_, 'messageEventDefinition')) {
     if (!messages.some((m) => m.attrs.id === def.attrs.messageRef)) report('error', f, `messageEventDefinition references unknown message "${def.attrs.messageRef}"`);
   }
+  // Camunda only merges message variables that an output mapping names once any output mapping exists.
+  // So a catch event with output mappings must map every payload variable the app publishes, or the new content is silently dropped.
+  try {
+    const src = readFileSync('pages/api/resubmit.js', 'utf8');
+    const payload = (src.match(/variables:\s*\{([^}]*)\}/)?.[1] || '').split(',').map((p) => p.split(':')[0].trim()).filter(Boolean);
+    for (const ev of all(process_, 'intermediateCatchEvent').filter((e) => child(e, 'messageEventDefinition'))) {
+      const outputs = child(child(ev, 'extensionElements') || { children: [] }, 'ioMapping')?.children.filter((c) => c.name === 'output') || [];
+      if (!outputs.length) continue;
+      const mapped = outputs.map((o) => o.attrs.target);
+      const missingPayload = payload.filter((k) => k !== 'submissionId' && !mapped.includes(k));
+      if (missingPayload.length) report('error', f, `message catch event "${ev.attrs.id}" has output mappings but does not map ${missingPayload.join(', ')}: Camunda discards unmapped message variables, so a resubmission would be ignored`);
+    }
+  } catch {
+    report('warn', f, 'could not read pages/api/resubmit.js to check that message output mappings carry the payload');
+  }
+
   // Send Message connector: heuristic on task type, template id and task name
   walk(process_, (n) => {
     if (n.name === 'taskDefinition' && /send.?message|:message:|publish.?message/i.test(n.attrs.type || '')) report('error', f, `task type "${n.attrs.type}" looks like the Send Message connector; use native message events`);

@@ -211,6 +211,9 @@
     <bpmn:intermediateCatchEvent id="Event_Resubmitted" name="Resubmission received">
       <bpmn:extensionElements>
         <zeebe:ioMapping>
+          <zeebe:output source="=articleBody" target="articleBody" />
+          <zeebe:output source="=articleTitle" target="articleTitle" />
+          <zeebe:output source="=wordCount" target="wordCount" />
           <zeebe:output source="=null" target="aiComplianceResult" />
           <zeebe:output source="=null" target="agentContext" />
           <zeebe:output source="=null" target="complianceResult" />
