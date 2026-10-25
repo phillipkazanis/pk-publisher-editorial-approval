@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" id="Definitions_PublisherComplianceRules" name="Publisher compliance rules" namespace="http://camunda.org/schema/1.0/dmn" exporter="Claude (hand-authored)" exporterVersion="1.0">
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_PublisherComplianceRules" name="Publisher compliance rules" namespace="http://camunda.org/schema/1.0/dmn" exporter="Claude (hand-authored)" exporterVersion="1.0" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.10.0">
   <decision id="publisherComplianceRules" name="Publisher compliance rules">
     <decisionTable id="DecisionTable_PublisherComplianceRules" hitPolicy="FIRST">
       <input id="Input_ExceedsMax" label="Exceeds max word count">
@@ -25,44 +25,104 @@
       <output id="Output_Verdict" label="verdict" name="verdict" typeRef="string" />
       <output id="Output_Reason" label="reason" name="reason" typeRef="string" />
       <rule id="Rule_ExceedsMax">
-        <inputEntry id="RuleIn_ExceedsMax_1"><text>true</text></inputEntry>
-        <inputEntry id="RuleIn_ExceedsMax_2"><text>-</text></inputEntry>
-        <inputEntry id="RuleIn_ExceedsMax_3"><text>-</text></inputEntry>
-        <inputEntry id="RuleIn_ExceedsMax_4"><text>-</text></inputEntry>
-        <outputEntry id="RuleOut_ExceedsMax_1"><text>"FAIL"</text></outputEntry>
-        <outputEntry id="RuleOut_ExceedsMax_2"><text>"Article exceeds maximum word count"</text></outputEntry>
+        <inputEntry id="RuleIn_ExceedsMax_1">
+          <text>true</text>
+        </inputEntry>
+        <inputEntry id="RuleIn_ExceedsMax_2">
+          <text>-</text>
+        </inputEntry>
+        <inputEntry id="RuleIn_ExceedsMax_3">
+          <text>-</text>
+        </inputEntry>
+        <inputEntry id="RuleIn_ExceedsMax_4">
+          <text>-</text>
+        </inputEntry>
+        <outputEntry id="RuleOut_ExceedsMax_1">
+          <text>"FAIL"</text>
+        </outputEntry>
+        <outputEntry id="RuleOut_ExceedsMax_2">
+          <text>"Article exceeds maximum word count"</text>
+        </outputEntry>
       </rule>
       <rule id="Rule_BelowMin">
-        <inputEntry id="RuleIn_BelowMin_1"><text>-</text></inputEntry>
-        <inputEntry id="RuleIn_BelowMin_2"><text>true</text></inputEntry>
-        <inputEntry id="RuleIn_BelowMin_3"><text>-</text></inputEntry>
-        <inputEntry id="RuleIn_BelowMin_4"><text>-</text></inputEntry>
-        <outputEntry id="RuleOut_BelowMin_1"><text>"FAIL"</text></outputEntry>
-        <outputEntry id="RuleOut_BelowMin_2"><text>"Article below minimum word count"</text></outputEntry>
+        <inputEntry id="RuleIn_BelowMin_1">
+          <text>-</text>
+        </inputEntry>
+        <inputEntry id="RuleIn_BelowMin_2">
+          <text>true</text>
+        </inputEntry>
+        <inputEntry id="RuleIn_BelowMin_3">
+          <text>-</text>
+        </inputEntry>
+        <inputEntry id="RuleIn_BelowMin_4">
+          <text>-</text>
+        </inputEntry>
+        <outputEntry id="RuleOut_BelowMin_1">
+          <text>"FAIL"</text>
+        </outputEntry>
+        <outputEntry id="RuleOut_BelowMin_2">
+          <text>"Article below minimum word count"</text>
+        </outputEntry>
       </rule>
       <rule id="Rule_HasBanned">
-        <inputEntry id="RuleIn_HasBanned_1"><text>-</text></inputEntry>
-        <inputEntry id="RuleIn_HasBanned_2"><text>-</text></inputEntry>
-        <inputEntry id="RuleIn_HasBanned_3"><text>true</text></inputEntry>
-        <inputEntry id="RuleIn_HasBanned_4"><text>-</text></inputEntry>
-        <outputEntry id="RuleOut_HasBanned_1"><text>"FAIL"</text></outputEntry>
-        <outputEntry id="RuleOut_HasBanned_2"><text>"Article contains banned terms"</text></outputEntry>
+        <inputEntry id="RuleIn_HasBanned_1">
+          <text>-</text>
+        </inputEntry>
+        <inputEntry id="RuleIn_HasBanned_2">
+          <text>-</text>
+        </inputEntry>
+        <inputEntry id="RuleIn_HasBanned_3">
+          <text>true</text>
+        </inputEntry>
+        <inputEntry id="RuleIn_HasBanned_4">
+          <text>-</text>
+        </inputEntry>
+        <outputEntry id="RuleOut_HasBanned_1">
+          <text>"FAIL"</text>
+        </outputEntry>
+        <outputEntry id="RuleOut_HasBanned_2">
+          <text>"Article contains banned terms"</text>
+        </outputEntry>
       </rule>
       <rule id="Rule_NoHeadline">
-        <inputEntry id="RuleIn_NoHeadline_1"><text>-</text></inputEntry>
-        <inputEntry id="RuleIn_NoHeadline_2"><text>-</text></inputEntry>
-        <inputEntry id="RuleIn_NoHeadline_3"><text>-</text></inputEntry>
-        <inputEntry id="RuleIn_NoHeadline_4"><text>false</text></inputEntry>
-        <outputEntry id="RuleOut_NoHeadline_1"><text>"FAIL"</text></outputEntry>
-        <outputEntry id="RuleOut_NoHeadline_2"><text>"Headline missing"</text></outputEntry>
+        <inputEntry id="RuleIn_NoHeadline_1">
+          <text>-</text>
+        </inputEntry>
+        <inputEntry id="RuleIn_NoHeadline_2">
+          <text>-</text>
+        </inputEntry>
+        <inputEntry id="RuleIn_NoHeadline_3">
+          <text>-</text>
+        </inputEntry>
+        <inputEntry id="RuleIn_NoHeadline_4">
+          <text>false</text>
+        </inputEntry>
+        <outputEntry id="RuleOut_NoHeadline_1">
+          <text>"FAIL"</text>
+        </outputEntry>
+        <outputEntry id="RuleOut_NoHeadline_2">
+          <text>"Headline missing"</text>
+        </outputEntry>
       </rule>
       <rule id="Rule_Pass">
-        <inputEntry id="RuleIn_Pass_1"><text>-</text></inputEntry>
-        <inputEntry id="RuleIn_Pass_2"><text>-</text></inputEntry>
-        <inputEntry id="RuleIn_Pass_3"><text>-</text></inputEntry>
-        <inputEntry id="RuleIn_Pass_4"><text>-</text></inputEntry>
-        <outputEntry id="RuleOut_Pass_1"><text>"PASS"</text></outputEntry>
-        <outputEntry id="RuleOut_Pass_2"><text>"Passed deterministic rules"</text></outputEntry>
+        <inputEntry id="RuleIn_Pass_1">
+          <text>-</text>
+        </inputEntry>
+        <inputEntry id="RuleIn_Pass_2">
+          <text>-</text>
+        </inputEntry>
+        <inputEntry id="RuleIn_Pass_3">
+          <text>-</text>
+        </inputEntry>
+        <inputEntry id="RuleIn_Pass_4">
+          <text>-</text>
+        </inputEntry>
+        <outputEntry id="RuleOut_Pass_1">
+          <text>"PASS"</text>
+        </outputEntry>
+        <outputEntry id="RuleOut_Pass_2">
+          <text>"Passed deterministic rules"</text>
+        </outputEntry>
       </rule>
     </decisionTable>
   </decision>
