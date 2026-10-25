@@ -1,14 +1,10 @@
 import { useEffect, useState } from 'react';
-import Head from 'next/head';
+import Layout from '../components/Layout';
 import { CLEAN_HEADLINE, CLEAN_BODY, REVISION_HEADLINE, REVISION_BODY } from '../lib/test-articles';
-import styles from '../styles/Home.module.css';
+import styles from '../styles/App.module.css';
 
 // Demo-only helper buttons. Must stay off on production unless the demo is running (see .env.example).
 const SHOW_TEST_BUTTONS = process.env.NEXT_PUBLIC_SHOW_TEST_BUTTON === 'true';
-
-// Branding is configured per environment and is not stored in the repo (see .env.example).
-const BRAND_NAME = process.env.NEXT_PUBLIC_BRAND_NAME || 'Editorial Console';
-const BRAND_LOGO = process.env.NEXT_PUBLIC_BRAND_LOGO || '';
 
 const STATUS_LABELS = {
   submitted: 'Submitted',
@@ -33,7 +29,6 @@ export default function Home() {
   const [email, setEmail] = useState('');
   const [submissionId, setSubmissionId] = useState('');
   const [status, setStatus] = useState('');
-  const [logoFailed, setLogoFailed] = useState(false);
   const [trackedId, setTrackedId] = useState('');
   const [latestStatus, setLatestStatus] = useState('');
 
@@ -105,126 +100,106 @@ export default function Home() {
   const states = stepStates(latestStatus);
 
   return (
-    <div className={styles.page}>
-      <Head>
-        <title>{`${BRAND_NAME} | Editorial submission`}</title>
-      </Head>
+    <Layout title="Editorial submission">
+      <h1 className={styles.title}>Editorial submission</h1>
+      <p className={styles.intro}>
+        Submit a draft article for automated checks and editorial approval. Revisions resubmit into the same process instance.
+      </p>
 
-      <header className={styles.header}>
-        <div className={styles.headerInner}>
-          <div className={styles.brand}>
-            {BRAND_LOGO && !logoFailed ? (
-              <img className={styles.logo} src={BRAND_LOGO} alt={BRAND_NAME} onError={() => setLogoFailed(true)} />
-            ) : (
-              <p className={styles.wordmark}>{BRAND_NAME}</p>
-            )}
-            <span className={styles.appName}>Editorial approval</span>
+      {statusLabel && (
+        <section className={styles.card} aria-label="Latest submission status" role="status" aria-live="polite">
+          <div className={styles.statusHead}>
+            <span className={styles.statusLabel}>Latest submission</span>
+            <span className={`${styles.badge} ${styles[`badge_${latestStatus}`] || ''}`}>{statusLabel}</span>
           </div>
-          <span className={styles.envPill}>Demo environment</span>
-        </div>
-      </header>
+          <ol className={styles.tracker} aria-label="Progress">
+            {STEPS.map((label, i) => (
+              <li
+                key={label}
+                className={`${styles.step} ${styles[`step_${states[i]}`]}`}
+                aria-current={states[i] === 'current' ? 'step' : undefined}
+              >
+                <span className={styles.dot} aria-hidden="true">
+                  {states[i] === 'done' ? '✓' : states[i] === 'attention' ? '!' : i + 1}
+                </span>
+                {label}
+                <span className={styles.srOnly}> ({states[i] === 'attention' ? 'needs revision' : states[i]})</span>
+              </li>
+            ))}
+          </ol>
+          {latestStatus === 'revision_requested' && (
+            <p className={`${styles.statusNote} ${styles.statusNoteWarn}`}>
+              A revision was requested. Edit the article below and resubmit it using the submission ID.
+            </p>
+          )}
+          {latestStatus === 'published' && <p className={styles.statusNote}>Published to the mock CMS.</p>}
+          {trackedId && (
+            <p className={styles.statusNote}>
+              Submission ID: <span className={styles.mono}>{trackedId}</span>
+            </p>
+          )}
+        </section>
+      )}
 
-      <main className={styles.main}>
-        <h1 className={styles.title}>Editorial submission</h1>
-        <p className={styles.intro}>
-          Submit a draft article for automated checks and editorial approval. Revisions resubmit into the same process instance.
-        </p>
-
-        {statusLabel && (
-          <section className={styles.card} aria-label="Latest submission status" role="status" aria-live="polite">
-            <div className={styles.statusHead}>
-              <span className={styles.statusLabel}>Latest submission</span>
-              <span className={`${styles.badge} ${styles[`badge_${latestStatus}`] || ''}`}>{statusLabel}</span>
+      <div className={styles.grid}>
+        <div>
+          {SHOW_TEST_BUTTONS && (
+            <div className={styles.demoTools}>
+              <span className={styles.demoToolsLabel}>Demo tools</span>
+              <button className={styles.btnSecondary} type="button" onClick={() => loadTestArticle(CLEAN_HEADLINE, CLEAN_BODY)}>
+                Load test article
+              </button>
+              <button className={styles.btnSecondary} type="button" onClick={() => loadTestArticle(REVISION_HEADLINE, REVISION_BODY)}>
+                Load revision test article
+              </button>
             </div>
-            <ol className={styles.tracker} aria-label="Progress">
-              {STEPS.map((label, i) => (
-                <li
-                  key={label}
-                  className={`${styles.step} ${styles[`step_${states[i]}`]}`}
-                  aria-current={states[i] === 'current' ? 'step' : undefined}
-                >
-                  <span className={styles.dot} aria-hidden="true">
-                    {states[i] === 'done' ? '✓' : states[i] === 'attention' ? '!' : i + 1}
-                  </span>
-                  {label}
-                  <span className={styles.srOnly}> ({states[i] === 'attention' ? 'needs revision' : states[i]})</span>
-                </li>
-              ))}
-            </ol>
-            {latestStatus === 'revision_requested' && (
-              <p className={`${styles.statusNote} ${styles.statusNoteWarn}`}>
-                A revision was requested. Edit the article below and resubmit it using the submission ID.
-              </p>
-            )}
-            {latestStatus === 'published' && <p className={styles.statusNote}>Published to the mock CMS.</p>}
-            {trackedId && (
-              <p className={styles.statusNote}>
-                Submission ID: <span className={styles.mono}>{trackedId}</span>
-              </p>
-            )}
+          )}
+
+          <section className={styles.card}>
+            <h2 className={styles.cardTitle}>Submit an article</h2>
+            <p className={styles.cardHint}>Starts a new process instance.</p>
+            <form onSubmit={submit}>
+              <label className={styles.label} htmlFor="headline">Headline</label>
+              <input id="headline" className={styles.input} value={title} onChange={(e) => setTitle(e.target.value)} />
+              <label className={styles.label} htmlFor="body">Article body</label>
+              <textarea id="body" className={styles.textarea} value={body} onChange={(e) => setBody(e.target.value)} />
+              <label className={styles.label} htmlFor="email">Submitter email</label>
+              <input id="email" className={styles.input} value={email} onChange={(e) => setEmail(e.target.value)} />
+              <button className={styles.btnPrimary} type="submit">Submit article</button>
+            </form>
           </section>
-        )}
 
-        <div className={styles.grid}>
-          <div>
-            {SHOW_TEST_BUTTONS && (
-              <div className={styles.demoTools}>
-                <span className={styles.demoToolsLabel}>Demo tools</span>
-                <button className={styles.btnSecondary} type="button" onClick={() => loadTestArticle(CLEAN_HEADLINE, CLEAN_BODY)}>
-                  Load test article
-                </button>
-                <button className={styles.btnSecondary} type="button" onClick={() => loadTestArticle(REVISION_HEADLINE, REVISION_BODY)}>
-                  Load revision test article
-                </button>
-              </div>
-            )}
+          <section className={styles.card}>
+            <h2 className={styles.cardTitle}>Resubmit a revision</h2>
+            <p className={styles.cardHint}>Uses the headline and body above and continues the same process instance.</p>
+            <form onSubmit={resubmit}>
+              <label className={styles.label} htmlFor="submissionId">Submission ID</label>
+              <input id="submissionId" className={styles.input} value={submissionId} onChange={(e) => setSubmissionId(e.target.value)} />
+              <button className={styles.btnPrimary} type="submit">Resubmit revised article</button>
+            </form>
+          </section>
 
-            <section className={styles.card}>
-              <h2 className={styles.cardTitle}>Submit an article</h2>
-              <p className={styles.cardHint}>Starts a new process instance.</p>
-              <form onSubmit={submit}>
-                <label className={styles.label} htmlFor="headline">Headline</label>
-                <input id="headline" className={styles.input} value={title} onChange={(e) => setTitle(e.target.value)} />
-                <label className={styles.label} htmlFor="body">Article body</label>
-                <textarea id="body" className={styles.textarea} value={body} onChange={(e) => setBody(e.target.value)} />
-                <label className={styles.label} htmlFor="email">Submitter email</label>
-                <input id="email" className={styles.input} value={email} onChange={(e) => setEmail(e.target.value)} />
-                <button className={styles.btnPrimary} type="submit">Submit article</button>
-              </form>
-            </section>
-
-            <section className={styles.card}>
-              <h2 className={styles.cardTitle}>Resubmit a revision</h2>
-              <p className={styles.cardHint}>Uses the headline and body above and continues the same process instance.</p>
-              <form onSubmit={resubmit}>
-                <label className={styles.label} htmlFor="submissionId">Submission ID</label>
-                <input id="submissionId" className={styles.input} value={submissionId} onChange={(e) => setSubmissionId(e.target.value)} />
-                <button className={styles.btnPrimary} type="submit">Resubmit revised article</button>
-              </form>
-            </section>
-
-            <p className={styles.statusMessage} aria-live="polite">{status}</p>
-          </div>
-
-          <aside className={styles.card}>
-            <h2 className={styles.asideTitle}>How this demo works</h2>
-            <ol className={styles.asideList}>
-              <li>Submit a headline and article body.</li>
-              <li>Automated rules and an AI tone check run first.</li>
-              <li>If a check fails, a revision request is sent and the process waits for your resubmission.</li>
-              <li>If the checks pass, an editor approves or rejects the article in Tasklist.</li>
-              <li>A rejection also requests a revision. Resubmit with the same submission ID to continue the same process instance.</li>
-              <li>An approved article publishes to a mock CMS. The first attempt fails on purpose and retries automatically.</li>
-            </ol>
-            <dl className={styles.where}>
-              <dt>Approvals</dt>
-              <dd>Camunda Tasklist (native task UI)</dd>
-              <dt>Audit trail and history</dt>
-              <dd>Camunda Operate</dd>
-            </dl>
-          </aside>
+          <p className={styles.statusMessage} aria-live="polite">{status}</p>
         </div>
-      </main>
-    </div>
+
+        <aside className={styles.card}>
+          <h2 className={styles.asideTitle}>How this demo works</h2>
+          <ol className={styles.asideList}>
+            <li>Submit a headline and article body.</li>
+            <li>Automated rules and an AI tone check run first.</li>
+            <li>If a check fails, a revision request is sent and the process waits for your resubmission.</li>
+            <li>If the checks pass, an editor approves or rejects the article in Tasklist.</li>
+            <li>A rejection also requests a revision. Resubmit with the same submission ID to continue the same process instance.</li>
+            <li>An approved article publishes to a mock CMS. The first attempt fails on purpose and retries automatically.</li>
+          </ol>
+          <dl className={styles.where}>
+            <dt>Approvals</dt>
+            <dd>Camunda Tasklist (native task UI)</dd>
+            <dt>Audit trail and history</dt>
+            <dd>Camunda Operate</dd>
+          </dl>
+        </aside>
+      </div>
+    </Layout>
   );
 }
