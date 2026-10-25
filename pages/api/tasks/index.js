@@ -2,7 +2,7 @@ import { camundaRequest, missingCamundaEnv } from '../../../lib/camunda-auth';
 
 const EDITOR_GROUP = 'editors';
 const APPROVAL_ELEMENT_ID = 'Task_EditorialApproval';
-const WANTED = ['submissionId', 'articleTitle', 'articleBody', 'wordCount', 'submitterEmail', 'complianceResult', 'aiComplianceResult'];
+const WANTED = ['submissionId', 'submittedBy', 'articleTitle', 'articleBody', 'wordCount', 'submitterEmail', 'complianceResult', 'aiComplianceResult'];
 
 // Variable values come back as JSON-encoded strings.
 function parseValue(raw) {
@@ -49,6 +49,7 @@ export default async function handler(req, res) {
           assignee: t.assignee || null,
           created: t.creationDate,
           submissionId: vars.submissionId || null,
+          submittedBy: vars.submittedBy || null,
           articleTitle: vars.articleTitle || null,
           articleBody: vars.articleBody || null,
           wordCount: vars.wordCount ?? null,

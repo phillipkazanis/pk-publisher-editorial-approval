@@ -107,6 +107,7 @@ export default function Admin() {
               <thead>
                 <tr>
                   <th>Headline</th>
+                  <th>Writer</th>
                   <th>Status</th>
                   <th>Publish attempts</th>
                   <th>Notifications</th>
@@ -124,6 +125,7 @@ export default function Admin() {
                         <div className={styles.taskMeta} title={r.lastNotification}>Revision reason: {reasonPreview(r.lastNotification)}</div>
                       )}
                     </td>
+                    <td data-label="Writer">{r.submittedBy || '-'}</td>
                     <td data-label="Status">
                       <span className={`${styles.badge} ${styles[`badge_${r.status}`] || ''}`}>{STATUS_LABELS[r.status] || r.status}</span>
                     </td>

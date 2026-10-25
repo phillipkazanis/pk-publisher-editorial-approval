@@ -16,7 +16,7 @@ Their stated priorities, in order: **statefulness and human-in-the-loop** (funct
 ## Before the session
 1. **Deploy** form, then DMN, then BPMN (the fixed version). Waiting instances on older versions keep their old behaviour: **cancel the old ones** (or migrate them in Operate) so the demo starts clean.
 2. **Environment:** cluster secrets `PUBLISHER_SUPABASE_KEY`, `BEDROCK_API_ACCESS_KEY`, `BEDROCK_API_ACCESS_SECRET` present. `MOCK_CMS_BASE_URL` in the app reachable **from the cluster** and not blocked by Vercel SSO. `NEXT_PUBLIC_SHOW_TEST_BUTTON=true` (turn it off afterwards).
-3. **People:** two editors (for example `editor1`, `editor2`) in candidate group `editors`, plus a manager who can reassign tasks, with Tasklist access. Use a second browser profile for the second editor.
+3. **People:** the four writers on the Submit page are simulated (fictional names; the writer travels as the `submittedBy` variable, visible in Operate, and Camunda's history shows the API client as the starter). **Editors must be real, separate Camunda users**, not simulated: two editors (for example `editor1`, `editor2`) in candidate group `editors`, plus a manager who can reassign tasks, with Tasklist access. Use a second browser profile for the second editor.
 4. **Rules data:** the 150-word minimum is switched off (the customer said length does not matter); the maximum is 1,200.
 5. **Pre-seed instances so nothing waits in front of the room.** The AI review takes about 45 seconds (the first model call alone about 24). About 10 minutes before:
    - one clean article **waiting at editor approval**
@@ -37,7 +37,7 @@ Their stated priorities, in order: **statefulness and human-in-the-loop** (funct
 4. After approval, the publish fails once (mock HTTP 500). Show the retry with backoff in Operate, then success. Say: the retry is configuration on the step, not code.
 
 **Revision loop in the same instance (S2).**
-1. Submit "Load revision test article" (a banned term). Note the **instance key**.
+1. Pick a writer in "Writing as", then submit "Load revision test article" (a banned term). Note the **instance key**. In **Revisions**, filter by that writer: each writer sees only their own articles.
 2. Show the reason on the Submit page, the article in **Revisions**, and the instance waiting in Operate.
 3. In **Revisions**, click **Revise**, edit, and **Resubmit** (or `npm run api -- resubmit <id> ...`). A second resubmit for the same round is refused.
 4. In Operate the **same instance key** loops back and continues. One instance, one audit trail, however many revisions.

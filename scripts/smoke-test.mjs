@@ -131,13 +131,19 @@ async function run() {
   check('admin API lists the test submission (published, 2 attempts)', adminRes.status === 200 && mine?.status === 'published' && mine?.publishAttempts === 2, `status ${adminRes.status}`);
 
   // 3d. Resubmission management (needs no Camunda): the revisions list, and the resubmit and abandon rules.
-  await seed(revId, { status: 'revision_requested', article_body: 'revised text goes here', last_notification: '[SMOKE TEST] fix the headline' });
+  await seed(revId, { status: 'revision_requested', article_body: 'revised text goes here', last_notification: '[SMOKE TEST] fix the headline', submitted_by: 'Smoke Writer A' });
   await seed(pubId, { status: 'published' });
   const revRes = await fetch(`${BASE_URL}/api/revisions`);
   const revBody = await revRes.json().catch(() => ({}));
   const rev = (revBody.revisions || []).find((r) => r.submissionId === revId);
   check('revisions API lists a submission waiting for a revision, with reason and text', revRes.status === 200 && rev?.reason === '[SMOKE TEST] fix the headline' && rev?.body === 'revised text goes here', `status ${revRes.status}`);
   check('revisions API does not list a published submission', !(revBody.revisions || []).some((r) => r.submissionId === pubId));
+  const ownArticles = await (await fetch(`${BASE_URL}/api/revisions?writer=${encodeURIComponent('Smoke Writer A')}`)).json().catch(() => ({}));
+  check('revisions API shows a writer only their own articles', ownArticles.revisions?.some((r) => r.submissionId === revId && r.submittedBy === 'Smoke Writer A') && ownArticles.revisions.every((r) => r.submittedBy === 'Smoke Writer A'));
+  const notMine = await (await fetch(`${BASE_URL}/api/revisions?writer=${encodeURIComponent('Smoke Writer B')}`)).json().catch(() => ({}));
+  check('revisions API hides it from another writer', Array.isArray(notMine.revisions) && !notMine.revisions.some((r) => r.submissionId === revId));
+  const adminWriter = await (await fetch(`${BASE_URL}/api/admin/submissions`)).json().catch(() => ({}));
+  check('admin API includes the writer', adminWriter.submissions?.find((x) => x.submissionId === revId)?.submittedBy === 'Smoke Writer A');
   const resubUnknown = await post('/api/resubmit', { submissionId: `${runId}-nope`, articleBody: 'one two three' });
   check('resubmit refuses an unknown submission (404)', resubUnknown.status === 404, `status ${resubUnknown.status}`);
   const resubPub = await post('/api/resubmit', { submissionId: pubId, articleBody: 'one two three' });

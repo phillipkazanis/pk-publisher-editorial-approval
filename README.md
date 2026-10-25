@@ -100,7 +100,11 @@ npm run api -- start --title "SMOKE TEST - timeout" --body-file docs/samples/rev
 npm run api -- resubmit <submissionId> --title "SMOKE TEST - API start" --body-file docs/samples/clean-article.txt
 ```
 
+Add `--writer "Priya Nair"` to start it as a simulated writer.
+
 It needs the `CAMUNDA_*` values and `MOCK_CMS_BASE_URL` in `.env.local`, prints each HTTP step with the bearer token redacted, and never prints the token or secret. `--revision-timeout` (an ISO duration such as `PT2M`) compresses the 24-hour abandon timer for a demo. It starts a **real** process instance on whatever cluster `.env.local` points at; try it against `npm run fake:camunda` first.
+
+**Simulated writers.** The Submit page has a "Writing as" picker with four fictional writers (`lib/writers.js`, reserved `.invalid` addresses). The choice is sent as the process variable `submittedBy` (visible in Operate) and stored on the app's record. Revisions can be filtered by writer, and Editor tasks and Admin show who wrote each article. In production the portal passes the signed-in journalist. Camunda's own history records the API client as the starter, so the writer is business data, not engine identity.
 
 To check the metrics calculation (pure function, no database or network):
 

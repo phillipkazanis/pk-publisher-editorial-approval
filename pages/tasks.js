@@ -92,6 +92,7 @@ export default function Tasks() {
         <section key={t.taskKey} className={styles.card}>
           <h2 className={styles.cardTitle}>{t.articleTitle || '(no headline)'}</h2>
           <p className={styles.taskMeta}>
+            {t.submittedBy ? `Written by ${t.submittedBy} · ` : ''}
             {t.wordCount != null ? `${t.wordCount} words · ` : ''}
             {t.assignee ? `Assigned to ${t.assignee} · ` : 'Unassigned · '}
             Waiting since {new Date(t.created).toLocaleString('en-AU')}

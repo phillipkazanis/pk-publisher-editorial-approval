@@ -1,7 +1,7 @@
 // Starts or resubmits an article straight through the Camunda REST API, secured with an OAuth 2.0
 // client-credentials token. This is the "start by API call" path from the PoC brief, with no UI or app route in between.
 //
-//   npm run api -- start --title "SMOKE TEST - API start" --body-file article.txt [--email who@example.com] [--revision-timeout PT2M] [--submission-id <id>]
+//   npm run api -- start --title "SMOKE TEST - API start" --body-file article.txt [--email who@example.com] [--writer "Alex Rivera"] [--revision-timeout PT2M] [--submission-id <id>]
 //   npm run api -- resubmit <submissionId> --title "..." --body-file revised.txt
 //
 // Needs CAMUNDA_OAUTH_URL, CAMUNDA_CLIENT_ID, CAMUNDA_CLIENT_SECRET, CAMUNDA_ZEEBE_REST_URL (and MOCK_CMS_BASE_URL for start).
@@ -38,6 +38,7 @@ if (!bodyFile) fail('--body-file is required');
 const articleBody = readFileSync(bodyFile, 'utf8').trim();
 if (!articleBody) fail('The body file is empty');
 const articleTitle = opts.title || null;
+const writer = opts.writer ? String(opts.writer).trim().slice(0, 80) || null : null; // simulated journalist, business data only
 const wordCount = articleBody.split(/\s+/).filter(Boolean).length;
 
 const submissionId = command === 'start' ? opts['submission-id'] || randomUUID() : positional[0];
@@ -91,6 +92,7 @@ if (command === 'start') {
     articleBody,
     wordCount,
     submitterEmail: opts.email || 'submitter@example.com',
+    submittedBy: writer,
     mockCmsBaseUrl: process.env.MOCK_CMS_BASE_URL,
     ...(timeout ? { revisionTimeout: timeout } : {}),
   };
@@ -107,6 +109,7 @@ if (command === 'start') {
       process_instance_key: String(instance.processInstanceKey),
       article_title: articleTitle,
       article_body: articleBody,
+      submitted_by: writer,
       word_count: wordCount,
       status: 'submitted',
     });

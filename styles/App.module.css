@@ -281,6 +281,16 @@
   color: var(--muted);
 }
 
+.hint {
+  margin: -8px 0 16px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.writerFilter {
+  max-width: 360px;
+  margin: 0 0 4px;
+}
+
 /* Live word count under the article text */
 .wordCount {
   margin: -8px 0 16px;

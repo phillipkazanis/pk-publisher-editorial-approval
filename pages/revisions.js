@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import WordCount, { useLimits } from '../components/WordCount';
+import WriterSelect, { useWriterId } from '../components/WriterSelect';
+import { WRITERS } from '../lib/writers';
 import { reasonPreview } from '../lib/reason';
 import styles from '../styles/App.module.css';
 
@@ -15,10 +17,12 @@ export default function Revisions() {
   const [body, setBody] = useState('');
   const [busy, setBusy] = useState(false);
   const limits = useLimits();
+  const [writerId, setWriterId] = useWriterId('');
+  const writerName = WRITERS.find((w) => w.id === writerId)?.name || '';
 
   const load = useCallback(async () => {
     try {
-      const r = await fetch('/api/revisions');
+      const r = await fetch(`/api/revisions${writerName ? `?writer=${encodeURIComponent(writerName)}` : ''}`);
       const j = await r.json();
       if (!r.ok) {
         setError(j.error || 'Could not load the list.');
@@ -29,7 +33,7 @@ export default function Revisions() {
     } catch {
       setError('Could not reach the app.');
     }
-  }, []);
+  }, [writerName]);
 
   useEffect(() => {
     load();
@@ -76,6 +80,10 @@ export default function Revisions() {
           Articles sent back for a revised version. Resubmitting continues the same process instance, so there is one history per article.
         </p>
 
+        <div className={styles.writerFilter}>
+          <WriterSelect id="writer-filter" label="Showing" includeAll value={writerId} onChange={setWriterId} />
+        </div>
+
         {items && items.length > 0 && (
           <div className={styles.summary}>
             <span className={styles.chip}>{items.length} waiting</span>
@@ -96,7 +104,7 @@ export default function Revisions() {
         {items === null && !error && <p className={styles.empty}>Loading...</p>}
         {items && !items.length && (
           <section className={styles.card}>
-            <p className={styles.empty}>No articles are waiting for a revision.</p>
+            <p className={styles.empty}>{writerName ? `No articles from ${writerName} are waiting for a revision.` : 'No articles are waiting for a revision.'}</p>
           </section>
         )}
 
@@ -109,7 +117,7 @@ export default function Revisions() {
                 <div className={styles.itemMain}>
                   <h2 className={styles.cardTitle}>{item.title || '(no headline)'}</h2>
                   <p className={styles.taskMeta}>
-                    Revision {item.round} · sent back {new Date(item.updatedAt).toLocaleString('en-AU')} ·{' '}
+                    {item.submittedBy ? `${item.submittedBy} · ` : ''}Revision {item.round} · sent back {new Date(item.updatedAt).toLocaleString('en-AU')} ·{' '}
                     <span className={styles.mono}>{item.submissionId.slice(0, 8)}</span>
                   </p>
                   {summary && !editing && <p className={styles.reasonPreview}>{summary}</p>}

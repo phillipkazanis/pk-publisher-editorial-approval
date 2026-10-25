@@ -19,8 +19,8 @@ const TOKEN = 'fake-token';
 const CLEAN_TEXT = `The city council voted on Tuesday to approve a new cycling network. The plan includes separated bike lanes, better lighting and secure parking at six train stations.\n\nThe first stage begins in March. A public information session will be held next month.`;
 
 const tasks = new Map([
-  ['2251799813685301', { assignee: null, creationDate: '2026-10-25T05:10:00.000Z', processInstanceKey: '2251799813685201', vars: { submissionId: 'fake-submission-1', articleTitle: '[FAKE] Cycling network approved', articleBody: CLEAN_TEXT, wordCount: 45, submitterEmail: 'journalist@example.invalid', complianceResult: { verdict: 'PASS', reason: 'Passed deterministic rules' }, aiComplianceResult: { responseJson: { verdict: 'PASS', reasons: [], warnings: ['HL-2: the headline is a question; the article only partly answers it.'], suggestedFixes: [], rulesChecked: ['HL-1', 'HL-2', 'AT-1', 'TN-1'] }, context: { note: 'conversation history omitted in the fake' } } } }],
-  ['2251799813685302', { assignee: 'editor1', creationDate: '2026-10-25T05:20:00.000Z', processInstanceKey: '2251799813685202', vars: { submissionId: 'fake-submission-2', articleTitle: '[FAKE] Storm warning issued', articleBody: 'The weather bureau has issued a severe storm warning for the region.', wordCount: 12, submitterEmail: 'journalist@example.invalid', complianceResult: { verdict: 'PASS', reason: 'Passed deterministic rules' }, aiComplianceResult: { responseJson: { verdict: 'PASS', reasons: [], warnings: [], suggestedFixes: [], rulesChecked: ['TN-1'] } } } }],
+  ['2251799813685301', { assignee: null, creationDate: '2026-10-25T05:10:00.000Z', processInstanceKey: '2251799813685201', vars: { submissionId: 'fake-submission-1', submittedBy: 'Alex Rivera', articleTitle: '[FAKE] Cycling network approved', articleBody: CLEAN_TEXT, wordCount: 45, submitterEmail: 'journalist@example.invalid', complianceResult: { verdict: 'PASS', reason: 'Passed deterministic rules' }, aiComplianceResult: { responseJson: { verdict: 'PASS', reasons: [], warnings: ['HL-2: the headline is a question; the article only partly answers it.'], suggestedFixes: [], rulesChecked: ['HL-1', 'HL-2', 'AT-1', 'TN-1'] }, context: { note: 'conversation history omitted in the fake' } } } }],
+  ['2251799813685302', { assignee: 'editor1', creationDate: '2026-10-25T05:20:00.000Z', processInstanceKey: '2251799813685202', vars: { submissionId: 'fake-submission-2', submittedBy: 'Sam Okafor', articleTitle: '[FAKE] Storm warning issued', articleBody: 'The weather bureau has issued a severe storm warning for the region.', wordCount: 12, submitterEmail: 'journalist@example.invalid', complianceResult: { verdict: 'PASS', reason: 'Passed deterministic rules' }, aiComplianceResult: { responseJson: { verdict: 'PASS', reasons: [], warnings: [], suggestedFixes: [], rulesChecked: ['TN-1'] } } } }],
 ]);
 const completed = [];
 const started = [];
@@ -67,7 +67,7 @@ const server = createServer(async (req, res) => {
     const v = body.variables || {};
     if (body.processDefinitionId !== 'publisherEditorialApproval' || !v.submissionId || !v.articleBody || !v.mockCmsBaseUrl) return problem(res, 400, 'unexpected process start request');
     const processInstanceKey = String(2251799813690000 + started.length);
-    started.push({ processInstanceKey, variableNames: Object.keys(v), revisionTimeout: v.revisionTimeout ?? null, submissionId: v.submissionId });
+    started.push({ processInstanceKey, variableNames: Object.keys(v), revisionTimeout: v.revisionTimeout ?? null, submissionId: v.submissionId, submittedBy: v.submittedBy ?? null, submitterEmail: v.submitterEmail ?? null });
     return send(res, 200, { processInstanceKey, processDefinitionKey: '2251799813680001', processDefinitionId: body.processDefinitionId });
   }
 

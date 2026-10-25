@@ -5,7 +5,7 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).end();
   try {
     const rows = await sb(
-      'submissions?select=submission_id,article_title,word_count,status,publish_attempts,last_notification,process_instance_key,created_at,updated_at&order=updated_at.desc&limit=50'
+      'submissions?select=submission_id,article_title,word_count,status,publish_attempts,last_notification,process_instance_key,submitted_by,created_at,updated_at&order=updated_at.desc&limit=50'
     );
     const notes = await sb('notifications?select=submission_id&limit=1000');
     const counts = {};
@@ -15,6 +15,7 @@ export default async function handler(req, res) {
       submissions: rows.map((r) => ({
         submissionId: r.submission_id,
         title: r.article_title,
+        submittedBy: r.submitted_by,
         wordCount: r.word_count,
         status: r.status,
         publishAttempts: r.publish_attempts,

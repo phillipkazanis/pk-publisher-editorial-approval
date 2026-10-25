@@ -4,9 +4,11 @@ import { sb } from '../../lib/supabase';
 // so the submitter can reopen one and resubmit into the same process instance.
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).end();
+  // Optional ?writer=<name> shows only that writer's articles, as a signed-in journalist would see.
+  const writer = typeof req.query.writer === 'string' && req.query.writer && req.query.writer.length <= 80 ? req.query.writer : null;
   try {
     const rows = await sb(
-      'submissions?status=eq.revision_requested&select=submission_id,article_title,article_body,last_notification,updated_at&order=updated_at.desc&limit=20'
+      `submissions?status=eq.revision_requested${writer ? `&submitted_by=eq.${encodeURIComponent(writer)}` : ''}&select=submission_id,article_title,article_body,last_notification,submitted_by,updated_at&order=updated_at.desc&limit=20`
     );
     const notes = await sb('notifications?select=submission_id&limit=1000');
     const counts = {};
@@ -18,6 +20,7 @@ export default async function handler(req, res) {
         title: r.article_title,
         body: r.article_body,
         reason: r.last_notification,
+        submittedBy: r.submitted_by,
         round: counts[r.submission_id] || 1,
         updatedAt: r.updated_at,
       })),

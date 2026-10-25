@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Layout from '../components/Layout';
 import WordCount, { useLimits } from '../components/WordCount';
+import WriterSelect, { useWriterId } from '../components/WriterSelect';
+import { WRITERS } from '../lib/writers';
 import { CLEAN_HEADLINE, CLEAN_BODY, REVISION_HEADLINE, REVISION_BODY, AI_CHECK_HEADLINE, AI_CHECK_BODY, LONG_HEADLINE, LONG_BODY } from '../lib/test-articles';
 import styles from '../styles/App.module.css';
 
@@ -29,7 +31,7 @@ const POLL_MS = 4000;
 export default function Home() {
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
-  const [email, setEmail] = useState('');
+  const [writerId, setWriterId] = useWriterId(WRITERS[0].id);
   const [status, setStatus] = useState('');
   const [trackedId, setTrackedId] = useState('');
   const [latestStatus, setLatestStatus] = useState('');
@@ -68,7 +70,7 @@ export default function Home() {
     const r = await fetch('/api/start-process', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ articleTitle: title, articleBody: body, submitterEmail: email }),
+      body: JSON.stringify({ articleTitle: title, articleBody: body, submitterEmail: writer.email, submittedBy: writer.name }),
     });
     const j = await r.json();
     if (!r.ok) return setStatus('Error: ' + j.error);
@@ -85,6 +87,7 @@ export default function Home() {
     setStatus('Test article loaded. Click Submit to send it.');
   }
 
+  const writer = WRITERS.find((w) => w.id === writerId) || WRITERS[0];
   const statusLabel = latestStatus ? STATUS_LABELS[latestStatus] || latestStatus.replace(/_/g, ' ') : '';
   const states = stepStates(latestStatus);
 
@@ -157,8 +160,8 @@ export default function Home() {
             <label className={styles.label} htmlFor="body">Article body</label>
             <textarea id="body" className={styles.textarea} value={body} onChange={(e) => setBody(e.target.value)} />
             <WordCount text={body} limits={limits} />
-            <label className={styles.label} htmlFor="email">Submitter email</label>
-            <input id="email" className={styles.input} value={email} onChange={(e) => setEmail(e.target.value)} />
+            <WriterSelect id="writer" label="Writing as" value={writerId} onChange={setWriterId} />
+            <p className={styles.hint}>Simulated writers. In production the portal passes the signed-in journalist.</p>
             <button className={styles.btnPrimary} type="submit">Submit article</button>
           </form>
         </section>

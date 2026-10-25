@@ -4,8 +4,10 @@ import { sb, wordCountOf } from '../../lib/supabase';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
-  const { articleTitle, articleBody, submitterEmail } = req.body || {};
+  const { articleTitle, articleBody, submitterEmail, submittedBy } = req.body || {};
   if (!articleBody) return res.status(400).json({ error: 'articleBody required' });
+  // The writer is business data (a simulated journalist), not a login. Keep it short and plain.
+  const writer = typeof submittedBy === 'string' && submittedBy.trim() ? submittedBy.trim().slice(0, 80) : null;
 
   const submissionId = randomUUID();
   const wordCount = wordCountOf(articleBody);
@@ -18,6 +20,7 @@ export default async function handler(req, res) {
         articleBody,
         wordCount,
         submitterEmail: submitterEmail || 'submitter@example.com',
+        submittedBy: writer,
         mockCmsBaseUrl: process.env.MOCK_CMS_BASE_URL,
       },
     });
@@ -28,6 +31,7 @@ export default async function handler(req, res) {
         process_instance_key: String(instance.processInstanceKey),
         article_title: articleTitle || null,
         article_body: articleBody,
+        submitted_by: writer,
         word_count: wordCount,
         status: 'submitted',
       }),
