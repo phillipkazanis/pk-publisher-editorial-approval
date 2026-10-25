@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import Layout from '../components/Layout';
 import styles from '../styles/App.module.css';
 
@@ -80,7 +81,10 @@ export default function Tasks() {
       {tasks === null && <p className={styles.empty}>Loading...</p>}
       {tasks && !tasks.length && !error && (
         <section className={styles.card}>
-          <p className={styles.empty}>No articles are waiting for approval.</p>
+          <p className={styles.empty}>
+            No articles are waiting for approval. An article reaches an editor only after it passes both the rules check and the AI review.
+            Articles that failed a check are under <Link href="/revisions">Revisions</Link>.
+          </p>
         </section>
       )}
 
