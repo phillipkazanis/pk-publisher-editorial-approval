@@ -98,6 +98,15 @@ async function run() {
   const bad = await post('/api/mock-cms/publish', {});
   check('mock publish rejects a missing submissionId (400)', bad.status === 400, `status ${bad.status}`);
 
+  // 3b. Status route behind the status strip: returns only the status
+  const stRes = await fetch(`${BASE_URL}/api/submission-status?submissionId=${encodeURIComponent(publishId)}`);
+  const stBody = await stRes.json().catch(() => ({}));
+  check('submission-status returns the current status', stRes.status === 200 && stBody.status === 'published' && Object.keys(stBody).length === 1, `status ${stRes.status}`);
+  const stNone = await fetch(`${BASE_URL}/api/submission-status`);
+  check('submission-status rejects a missing submissionId (400)', stNone.status === 400, `status ${stNone.status}`);
+  const stUnknown = await fetch(`${BASE_URL}/api/submission-status?submissionId=${encodeURIComponent(`${runId}-unknown`)}`);
+  check('submission-status returns 404 for an unknown submission', stUnknown.status === 404, `status ${stUnknown.status}`);
+
   // 4. Notify route records the notification and flags the submission
   await seed(notifyId);
   const notify = await post('/api/notify-submitter', { submissionId: notifyId, submitterEmail: 'smoke-test@example.invalid', reason: '[SMOKE TEST] revision reason' });
