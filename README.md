@@ -20,7 +20,6 @@ Camunda 8 demo: editorial content approval with AI compliance check, human appro
 | `lib/` | Camunda OAuth client and Supabase REST helper |
 | `scripts/smoke-test.mjs` | Local API smoke test |
 | `scripts/lint-camunda.mjs` | Lint for the files in `camunda/` |
-| `bpmn/`, `dmn/`, `forms/` | **Legacy copies from before the Git Sync restructure. They have drifted from `camunda/` and must not be deployed.** Pending removal. |
 
 ## Local setup
 
