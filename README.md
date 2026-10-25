@@ -12,8 +12,8 @@ Camunda 8 demo: editorial content approval with AI compliance check, human appro
 | Path | What it is |
 |------|------------|
 | `camunda/` | **Web Modeler Git Sync folder.** The current BPMN, DMN and form live here. Edit them in Web Modeler, not by hand. |
-| `pages/index.js`, `pages/_app.js`, `styles/` | Submission and resubmission form, styled as a news-portal page (placeholder text only) |
-| `pages/api/submission-status.js` | Read-only: returns a submission's status for the red status strip |
+| `pages/index.js`, `pages/_app.js`, `styles/` | Submission and resubmission form: a plain internal staff console with a status tracker (CSS module in `styles/`) |
+| `pages/api/submission-status.js` | Read-only: returns a submission's status for the status tracker |
 | `pages/api/start-process.js` | Starts a process instance (calls the Camunda cluster) |
 | `pages/api/resubmit.js` | Publishes the `publisher-approval-resubmitted` message (calls the Camunda cluster) |
 | `pages/api/mock-cms/publish.js` | Mock CMS: fails the first publish attempt per submission, succeeds on the second |

@@ -1,6 +1,14 @@
 :root {
-  --font-serif: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --bg: #f4f6f9;
+  --surface: #ffffff;
+  --text: #1c2430;
+  --muted: #5b6675;
+  --border: #d9dee5;
+  --accent: #1f4fd8;
+  --accent-dark: #173ba8;
+  --ok: #1a7f4b;
+  --warn: #b45309;
 }
 
 *,
@@ -12,6 +20,7 @@
 body {
   margin: 0;
   font-family: var(--font-sans);
-  background: #f4f4f2;
-  color: #1a1a1a;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
 }
