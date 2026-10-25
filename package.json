@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "smoke": "node --env-file-if-exists=.env.local scripts/smoke-test.mjs",
+    "lint:camunda": "node scripts/lint-camunda.mjs"
   },
   "dependencies": {
     "next": "14.2.15",
