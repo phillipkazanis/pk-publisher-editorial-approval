@@ -18,6 +18,7 @@ Camunda 8 demo: editorial content approval with AI compliance check, human appro
 | `pages/revisions.js` | **Revisions** view: a list of articles waiting for a revision; Revise opens an editor and Resubmit continues the same instance |
 | `pages/tasks.js`, `pages/api/tasks/` | **Editor tasks** view: open approval tasks with Approve and Reject (calls the Camunda REST API) |
 | `pages/admin.js`, `pages/api/admin/submissions.js`, `pages/api/admin/metrics.js`, `lib/metrics.js` | **Admin** view: a KPI strip (first-pass rate, revision rounds, time to publish, retries, abandonment) and a read-only table of submissions, from Supabase |
+| `pages/api/limits.js`, `components/WordCount.js` | The word-count limits from the same table the rules read, and a live word count on the Submit and Revisions forms |
 | `pages/api/llm-ops/compliance-check.js` | A deterministic stand-in for the AI service in the contract below; can simulate outages |
 | `pages/api/submission-status.js` | Read-only: returns a submission's status for the status tracker |
 | `pages/api/start-process.js` | Starts a process instance (calls the Camunda cluster) |

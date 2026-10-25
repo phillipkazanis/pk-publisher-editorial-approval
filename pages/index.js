@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Layout from '../components/Layout';
+import WordCount, { useLimits } from '../components/WordCount';
 import { CLEAN_HEADLINE, CLEAN_BODY, REVISION_HEADLINE, REVISION_BODY, AI_CHECK_HEADLINE, AI_CHECK_BODY, LONG_HEADLINE, LONG_BODY } from '../lib/test-articles';
 import styles from '../styles/App.module.css';
 
@@ -33,6 +34,7 @@ export default function Home() {
   const [trackedId, setTrackedId] = useState('');
   const [latestStatus, setLatestStatus] = useState('');
   const [latestReason, setLatestReason] = useState('');
+  const limits = useLimits();
 
   // Follow the status of the last submission made from this page until it is published.
   useEffect(() => {
@@ -154,6 +156,7 @@ export default function Home() {
             <input id="headline" className={styles.input} value={title} onChange={(e) => setTitle(e.target.value)} />
             <label className={styles.label} htmlFor="body">Article body</label>
             <textarea id="body" className={styles.textarea} value={body} onChange={(e) => setBody(e.target.value)} />
+            <WordCount text={body} limits={limits} />
             <label className={styles.label} htmlFor="email">Submitter email</label>
             <input id="email" className={styles.input} value={email} onChange={(e) => setEmail(e.target.value)} />
             <button className={styles.btnPrimary} type="submit">Submit article</button>

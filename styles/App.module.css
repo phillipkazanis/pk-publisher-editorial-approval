@@ -281,6 +281,17 @@
   color: var(--muted);
 }
 
+/* Live word count under the article text */
+.wordCount {
+  margin: -8px 0 16px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.wordCountWarn {
+  color: var(--warn);
+  font-weight: 700;
+}
+
 /* Forms */
 .label {
   display: block;

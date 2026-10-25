@@ -161,6 +161,11 @@ async function run() {
   const rates = ['firstPassRatePct', 'needingRevisionPct', 'abandonmentRatePct', 'retriedBeforePublishPct'].map((k) => metricsBody[k]);
   check('metrics API returns counts and sensible rates', metricsRes.status === 200 && typeof metricsBody.total === 'number' && rates.every((r) => r === null || (r >= 0 && r <= 100)), `status ${metricsRes.status}`);
 
+  // 3e2. The limits the forms display come from the same table the rules read
+  const limitsRes = await fetch(`${BASE_URL}/api/limits`);
+  const limitsBody = await limitsRes.json().catch(() => ({}));
+  check('limits API returns the word-count limits', limitsRes.status === 200 && limitsBody.maxWordCount > 0 && limitsBody.minWordCount >= 0, `status ${limitsRes.status}`);
+
   // 3f. The AI service contract stand-in (no model, no data): verdicts, validation and the simulated error cases
   const ai = (article, extraHeaders) =>
     fetch(`${BASE_URL}/api/llm-ops/compliance-check`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(extraHeaders || {}) }, body: JSON.stringify({ article, context: { submissionId: 'smoke', round: 1 } }) });

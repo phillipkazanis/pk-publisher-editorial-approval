@@ -41,7 +41,7 @@ Their stated priorities, in order: **statefulness and human-in-the-loop** (funct
 2. Show the reason on the Submit page, the article in **Revisions**, and the instance waiting in Operate.
 3. In **Revisions**, click **Revise**, edit, and **Resubmit** (or `npm run api -- resubmit <id> ...`). A second resubmit for the same round is refused.
 4. In Operate the **same instance key** loops back and continues. One instance, one audit trail, however many revisions.
-5. S2a, the other rules in the brief: "Load too-long test article" fails on the word-count maximum before the AI step; clearing the headline fails with "Headline missing".
+5. S2a, the other rules in the brief: "Load too-long test article": the form shows "1,358 words · maximum 1,200 · 158 over" as you type, and the rules fail it before the AI step with a reason that states the numbers ("Article is 1358 words, over the maximum of 1200."). A banned-term failure names the terms it found. Clearing the headline fails with "Headline missing".
 
 **Timeout (optional, the brief says only if supported).** Show the compressed timeout instance ending at **Abandoned**. The submission is marked abandoned, and a late resubmit is refused with a clear message instead of being lost.
 

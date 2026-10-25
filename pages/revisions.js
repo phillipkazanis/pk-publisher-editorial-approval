@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import Layout from '../components/Layout';
+import WordCount, { useLimits } from '../components/WordCount';
 import { reasonPreview } from '../lib/reason';
 import styles from '../styles/App.module.css';
 
@@ -13,6 +14,7 @@ export default function Revisions() {
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [busy, setBusy] = useState(false);
+  const limits = useLimits();
 
   const load = useCallback(async () => {
     try {
@@ -131,6 +133,7 @@ export default function Revisions() {
                   <input id="rev-headline" className={styles.input} value={title} onChange={(e) => setTitle(e.target.value)} />
                   <label className={styles.label} htmlFor="rev-body">Article body</label>
                   <textarea id="rev-body" className={styles.textarea} value={body} onChange={(e) => setBody(e.target.value)} />
+                  <WordCount text={body} limits={limits} />
                   {!item.body && <p className={styles.notice}>The earlier text was not saved for this article. Paste the revised article above.</p>}
                   <div className={styles.actions}>
                     <button className={styles.btnPrimary} type="submit" disabled={busy || !body.trim()}>
