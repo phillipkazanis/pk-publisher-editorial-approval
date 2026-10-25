@@ -41,7 +41,7 @@
           <text>"FAIL"</text>
         </outputEntry>
         <outputEntry id="RuleOut_ExceedsMax_2">
-          <text>"Article exceeds maximum word count"</text>
+          <text>"Article is " + string(wordCount) + " words, over the maximum of " + string(thresholdsResult.body[rule_key = "max_word_count"][1].threshold_value) + "."</text>
         </outputEntry>
       </rule>
       <rule id="Rule_BelowMin">
@@ -61,7 +61,7 @@
           <text>"FAIL"</text>
         </outputEntry>
         <outputEntry id="RuleOut_BelowMin_2">
-          <text>"Article below minimum word count"</text>
+          <text>"Article is " + string(wordCount) + " words, under the minimum of " + string(thresholdsResult.body[rule_key = "min_word_count"][1].threshold_value) + "."</text>
         </outputEntry>
       </rule>
       <rule id="Rule_HasBanned">
@@ -81,7 +81,7 @@
           <text>"FAIL"</text>
         </outputEntry>
         <outputEntry id="RuleOut_HasBanned_2">
-          <text>"Article contains banned terms"</text>
+          <text>"Article contains banned terms: " + string join(bannedWordsResult.body.word[contains(lower case(articleBody), lower case(item))], ", ")</text>
         </outputEntry>
       </rule>
       <rule id="Rule_NoHeadline">
