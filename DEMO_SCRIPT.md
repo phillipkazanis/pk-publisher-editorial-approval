@@ -38,6 +38,11 @@ The brief wants a revision triggered by an AI check failure **or** a human rejec
 3. Resubmit revised content: open the **Revisions** view, click **Revise** on the article (it shows why it was sent back and loads the last text), edit it, and click "Resubmit revised article". Or use the API: `npm run api -- resubmit <submissionId> --title "..." --body-file docs/samples/clean-article.txt` (a simple API call with revised content). A second resubmit for the same round is refused.
 4. In Operate: the **same instance key** loops back to the banned-word lookup and continues to approval. One instance, one audit trail.
 
+**S2a: the other deterministic rules** (the brief's examples are word count, banned words and a missing headline). Banned words is S2 above.
+- Word count: submit "Load too-long test article" (1,358 words, over the 1,200 maximum). It fails with "Article exceeds maximum word count" before the AI step runs.
+- Missing headline: clear the headline field and submit. It fails with "Headline missing".
+- Note: the rules also enforce a 150-word minimum that the brief does not ask for. A revision under 150 words will bounce for that reason.
+
 **S2b: AI check fails while the rules pass** (the brief's "AI check fail" trigger).
 1. Submit "Load AI-check test article". It has no banned terms and is long enough, so the DMN passes it. The agent should fail it for unattributed allegations and loaded language.
 2. In Operate, show the agent's tool calls and its verdict. The submitter sees the agent's reasons and suggested fixes (each names a style rule such as AT-1, LG-1 or SL-1). The instance waits in the same place as in S2.

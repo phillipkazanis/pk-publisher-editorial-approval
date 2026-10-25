@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Layout from '../components/Layout';
-import { CLEAN_HEADLINE, CLEAN_BODY, REVISION_HEADLINE, REVISION_BODY, AI_CHECK_HEADLINE, AI_CHECK_BODY } from '../lib/test-articles';
+import { CLEAN_HEADLINE, CLEAN_BODY, REVISION_HEADLINE, REVISION_BODY, AI_CHECK_HEADLINE, AI_CHECK_BODY, LONG_HEADLINE, LONG_BODY } from '../lib/test-articles';
 import styles from '../styles/App.module.css';
 
 // Demo-only helper buttons. Must stay off on production unless the demo is running (see .env.example).
@@ -141,6 +141,9 @@ export default function Home() {
             </button>
             <button className={styles.btnSecondary} type="button" onClick={() => loadTestArticle(AI_CHECK_HEADLINE, AI_CHECK_BODY)}>
               Load AI-check test article
+            </button>
+            <button className={styles.btnSecondary} type="button" onClick={() => loadTestArticle(LONG_HEADLINE, LONG_BODY)}>
+              Load too-long test article
             </button>
           </div>
         )}
