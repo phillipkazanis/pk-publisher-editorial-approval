@@ -1,4 +1,8 @@
 import { useState } from 'react';
+import { CLEAN_HEADLINE, CLEAN_BODY, REVISION_HEADLINE, REVISION_BODY } from '../lib/test-articles';
+
+// Demo-only helper buttons. Must stay off on production unless the demo is running (see .env.example).
+const SHOW_TEST_BUTTONS = process.env.NEXT_PUBLIC_SHOW_TEST_BUTTON === 'true';
 
 const box = { maxWidth: 640, margin: '40px auto', fontFamily: 'system-ui, sans-serif', padding: 16 };
 const input = { width: '100%', padding: 8, marginBottom: 12, boxSizing: 'border-box' };
@@ -37,10 +41,27 @@ export default function Home() {
     setStatus(r.ok ? 'Resubmitted to the same process instance.' : 'Error: ' + j.error);
   }
 
+  // Fill the form only; the user still clicks Submit.
+  function loadTestArticle(headline, articleText) {
+    setTitle(headline);
+    setBody(articleText);
+    setStatus('Test article loaded. Click Submit to send it.');
+  }
+
   return (
     <main style={box}>
       <h1>Editorial submission</h1>
       <p>Submit a draft article. Revisions resubmit into the same process instance.</p>
+      {SHOW_TEST_BUTTONS && (
+        <p>
+          <button style={{ ...btn, marginRight: 8 }} type="button" onClick={() => loadTestArticle(CLEAN_HEADLINE, CLEAN_BODY)}>
+            Load test article
+          </button>
+          <button style={btn} type="button" onClick={() => loadTestArticle(REVISION_HEADLINE, REVISION_BODY)}>
+            Load revision test article
+          </button>
+        </p>
+      )}
       <form onSubmit={submit}>
         <label>Headline</label>
         <input style={input} value={title} onChange={(e) => setTitle(e.target.value)} />
