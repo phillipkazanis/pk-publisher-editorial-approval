@@ -35,7 +35,7 @@ The brief wants a revision triggered by an AI check failure **or** a human rejec
 **S2: rules failure.**
 1. Submit "Load revision test article" (contains the banned term "guaranteed"). Note the **process instance key**.
 2. The submitter sees "Revision requested" **with the reason** on the Submit view, and the Admin view lists it. In Operate the instance waits at the event-based gateway.
-3. Resubmit revised content: the Submit view's resubmit form, or `npm run api -- resubmit <submissionId> --title "..." --body-file docs/samples/clean-article.txt` (a simple API call with revised content).
+3. Resubmit revised content: on the Submit view, open the article under "Revisions needed" ("Revise this article" loads the last text and the id), edit it, and click "Resubmit revised article". Or use the API: `npm run api -- resubmit <submissionId> --title "..." --body-file docs/samples/clean-article.txt` (a simple API call with revised content). A second resubmit for the same round is refused.
 4. In Operate: the **same instance key** loops back to the banned-word lookup and continues to approval. One instance, one audit trail.
 
 **S2b: AI check fails while the rules pass** (the brief's "AI check fail" trigger).
@@ -52,7 +52,7 @@ The brief wants a revision triggered by an AI check failure **or** a human rejec
 **Optional timeout to Abandoned** (the brief says include it only if supported).
 1. Start with a compressed timeout: `npm run api -- start --title "SMOKE TEST - timeout" --body-file docs/samples/revision-article.txt --revision-timeout PT2M`
 2. It fails the rules, then waits. After 2 minutes, show in Operate that the instance ended at the **Abandoned** end event.
-3. The Admin view does not change status on abandonment (known gap). Say so if asked.
+3. The process marks the submission abandoned before it ends, so the Submit and Admin views show Abandoned, and a late resubmit is refused with a clear message instead of being lost.
 
 ## Part C: Resilience test (S4, required, 3 min) - DECISION PENDING
 The brief requires restarting or interrupting **the orchestration engine/service** during the human approval wait, and showing the paused instance survives and resumes with no data loss, captured as before/after evidence. It calls this one of the most important evaluation points.

@@ -19,7 +19,9 @@ Camunda 8 demo: editorial content approval with AI compliance check, human appro
 | `pages/admin.js`, `pages/api/admin/submissions.js` | **Admin** view: read-only table of submissions from Supabase |
 | `pages/api/submission-status.js` | Read-only: returns a submission's status for the status tracker |
 | `pages/api/start-process.js` | Starts a process instance (calls the Camunda cluster) |
-| `pages/api/resubmit.js` | Publishes the `publisher-approval-resubmitted` message (calls the Camunda cluster) |
+| `pages/api/resubmit.js` | Resubmits into the same instance: only while the submission is waiting for a revision, once per round, by publishing the `publisher-approval-resubmitted` message (calls the Camunda cluster) |
+| `pages/api/revisions.js` | Read-only: submissions waiting for a revision, with the reason and last text, for the "Revisions needed" panel |
+| `pages/api/mark-abandoned.js` | Called by the process when the revision timer fires, so the app stops accepting resubmissions |
 | `pages/api/mock-cms/publish.js` | Mock CMS: fails the first publish attempt per submission, succeeds on the second |
 | `pages/api/notify-submitter.js` | Revision notification stub (writes to Supabase) |
 | `lib/` | Camunda OAuth client and Supabase REST helper |

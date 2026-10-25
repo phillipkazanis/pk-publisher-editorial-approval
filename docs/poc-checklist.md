@@ -24,9 +24,9 @@ Every item in the PoC brief, where this demo addresses it, and how sure we are. 
 | 6 | Check fails: route to Revision Required | Rules fail or AI fail go to "Notify submitter" then the wait state. | Built, not run live |
 | 7 | Check passes: continue to approval | Gateways to the editorial approval user task. | Verified live |
 | 8 | Revision Required: notify the submitter **with the reason** (email is fine) | HTTP stub writes a `notifications` row. The reason is now shown to the submitter on the Submit view and on the Admin view. Not real email (brief allows email; this is a stub). | Built, not run live. Partial (not email) |
-| 9 | Same process instance returns to a waiting-for-resubmission state, not a new submission | Event-based gateway waits for the `publisher-approval-resubmitted` message (correlation key `submissionId`). Prove it by showing the **same process instance key** before and after in Operate. | Built, not run live |
-| 10 | Resubmission via a simple API call with revised content routes back to step 2 | `/api/resubmit`, the Submit view, or `npm run api -- resubmit <id>`. Loops to the banned-word lookup. | Built, not run live |
-| 11 | Optional: no resubmission within a defined time marks the instance Abandoned (24 h, simulated for demo) | Timer on the event-based gateway (default `PT24H`, overridable with the `revisionTimeout` variable). Compress with `npm run api -- start ... --revision-timeout PT2M`. Operate shows the instance ending at the "Abandoned" end event. The Admin view does not change status on abandonment. | Built, not run live. Partial (Admin) |
+| 9 | Same process instance returns to a waiting-for-resubmission state, not a new submission | Event-based gateway waits for the `publisher-approval-resubmitted` message (correlation key `submissionId`). Prove it by showing the **same process instance key** before and after in Operate. See "Resubmission management" below. | Built, not run live |
+| 10 | Resubmission via a simple API call with revised content routes back to step 2 | `/api/resubmit`, the "Revisions needed" panel on the Submit view, or `npm run api -- resubmit <id>`. Loops to the banned-word lookup. Only allowed while the submission is waiting for a revision, and only once per round. | Built, not run live |
+| 11 | Optional: no resubmission within a defined time marks the instance Abandoned (24 h, simulated for demo) | Timer on the event-based gateway (default `PT24H`, overridable with the `revisionTimeout` variable). Compress with `npm run api -- start ... --revision-timeout PT2M`. The instance marks the submission abandoned in Supabase, then ends at the "Abandoned" end event. The app then shows Abandoned and refuses a late resubmission. | Built, not run live |
 | 12 | Human approval via a task interface; **note which approach is used** | Native Tasklist is primary. The custom Editor tasks view is an alternative. The written summary must say both. | Approval verified live |
 | 13 | Pause from minutes to (simulated) days; state survives | The user task has no timer or timeout. The Editor tasks view shows "waiting since". Demonstrated for real by the resilience test. | Built, not run live |
 | 14 | Approver delegation: reassign a pending task to another user | Native in Tasklist (assign to another user). Needs two users in group `editors` and someone allowed to reassign. | Built, prerequisites unconfirmed |
@@ -59,6 +59,27 @@ Options to close the gap (a decision is needed):
 | Agents (AI/LLM) | AI Agent sub-process with tools in the process (item 3); the model decides which tools to call | Built, not run live |
 | Audit trail | Operate instance history and variables (item 19) | Partial, to verify |
 | Event/API trigger | Form, `npm run api -- start` (items 1, 2) | Form verified live. Script not run live |
+
+## Resubmission management
+
+**Model.** One process instance per article. A revision is a *message* correlated by `submissionId` to that instance's waiting state (the event-based gateway), never a new instance. The alternative, a task for the submitter in Tasklist, was not chosen because the brief asks for resubmission by a simple API call.
+
+**Rules the demo enforces**
+1. **Only a submission that is waiting for a revision can be resubmitted.** Unknown ids get 404. A submission that is still being checked, already resubmitted, published or abandoned gets 409 with a plain explanation. Before this, a resubmit at the wrong time was silently buffered or lost.
+2. **Exactly once per revision round.** The status is claimed atomically before the message is published, and the message carries `messageId = <submissionId>:r<round>`, so a double click or a retry cannot start a second loop. If Camunda cannot be reached, the claim is put back so the submitter can try again.
+3. **Time to live is an integer in milliseconds** (5 minutes). The earlier code sent an ISO string (`PT1H`), which the API most likely rejects, so no resubmission would have worked. The fake Camunda now rejects that mistake too.
+4. **Every loop starts clean.** On resubmission the catch event clears the previous round's agent result and conversation, rules result, approval decision, revision reason and notification result, and increments `revisionRound`. The agent also starts each round with an empty conversation, so it cannot continue the previous article's chat.
+5. **Timeout ends cleanly.** After the timer fires the process marks the submission abandoned in Supabase, then ends at "Abandoned". The app shows Abandoned and refuses a late resubmission instead of reporting success for a message nothing would receive.
+
+**Submitter experience.** The revision request shows the agent's reasons and suggested fixes. The Submit view has a "Revisions needed" panel that lists waiting submissions, reopens the last saved text and resubmits into the same instance. Article text is now stored with the submission for this.
+
+**Verify on the cluster** (none of this has run live)
+1. Resubmit a waiting instance: the same instance key loops back, the agent runs again, and the second round's conversation in `aiComplianceResult.context` does not contain the first article.
+2. `revisionRound` is 1 after the first loop and the previous round's results are gone.
+3. Start with `--revision-timeout PT2M`, wait, and confirm the instance ends at Abandoned, the app shows Abandoned, and a resubmit is refused.
+4. Double-clicking "Resubmit revised article" produces one loop, not two.
+
+**Instances already running keep the process version they started on.** Anything started before the new BPMN is deployed keeps the old behaviour: it will accept a resubmission, but it will not clear the previous round, count rounds or mark itself abandoned. Start new instances after deploying.
 
 ## AI compliance agent
 
