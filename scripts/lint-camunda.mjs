@@ -70,9 +70,13 @@ if (bpmn) {
   walk(bpmn, (n) => { if (n.attrs.id) { (ids[n.attrs.id] ||= []).push(n.name); } });
   Object.entries(ids).filter(([, v]) => v.length > 1).forEach(([id]) => report('error', f, `duplicate id "${id}"`));
 
-  // flat process
+  // flat process, with one deliberate exception: the AI Agent sub-process (an ad-hoc sub-process run by the AI Agent connector)
+  const taskType = (n) => child(child(n, 'extensionElements') || { children: [] }, 'taskDefinition')?.attrs.type || '';
+  const isAgent = (n) => /^io\.camunda\.agenticai:aiagent[:-]/.test(taskType(n));
   for (const bad of ['subProcess', 'adHocSubProcess', 'transaction', 'callActivity']) {
-    all(process_, bad).forEach((n) => report('error', f, `${bad} "${n.attrs.id}" breaks the flat-process rule`));
+    all(process_, bad)
+      .filter((n) => !(bad === 'adHocSubProcess' && isAgent(n)))
+      .forEach((n) => report('error', f, `${bad} "${n.attrs.id}" breaks the flat-process rule`));
   }
 
   // user tasks
@@ -91,6 +95,26 @@ if (bpmn) {
     if (!elementIds.has(fl.attrs.sourceRef)) report('error', f, `flow "${fl.attrs.id}" has unknown sourceRef`);
     if (!elementIds.has(fl.attrs.targetRef)) report('error', f, `flow "${fl.attrs.id}" has unknown targetRef`);
     if (fl.attrs.sourceRef === fl.attrs.targetRef) report('error', f, `flow "${fl.attrs.id}" is self-referencing`);
+  }
+
+  // AI Agent sub-process: bounded loop, documented tools without sequence flows, an output mapping
+  for (const agent of all(process_, 'adHocSubProcess').filter(isAgent)) {
+    const aid = agent.attrs.id;
+    report('warn', f, `adHocSubProcess "${aid}" is the AI Agent sub-process: an intentional exception to the flat-process rule`);
+    const mapping = child(child(agent, 'extensionElements') || { children: [] }, 'ioMapping');
+    const inputs = mapping ? mapping.children.filter((c) => c.name === 'input') : [];
+    const max = inputs.find((i) => i.attrs.target === 'data.limits.maxModelCalls');
+    const maxN = max ? Number(String(max.attrs.source).replace(/^=/, '')) : NaN;
+    if (!(maxN >= 1 && maxN <= 10)) report('error', f, `agent "${aid}" must bound its loop with data.limits.maxModelCalls between 1 and 10`);
+    if (!mapping || !mapping.children.some((c) => c.name === 'output' && c.attrs.target)) report('error', f, `agent "${aid}" has no output mapping for its result`);
+    const tools = agent.children.filter((c) => /Task$|^callActivity$/.test(c.name));
+    if (!tools.length) report('error', f, `agent "${aid}" has no tools`);
+    for (const tool of tools) {
+      if (!child(tool, 'documentation')?.text.trim()) report('error', f, `tool "${tool.attrs.id}" needs documentation: the model reads it as the tool description`);
+      if (flows.some((fl) => fl.attrs.sourceRef === tool.attrs.id || fl.attrs.targetRef === tool.attrs.id)) report('error', f, `tool "${tool.attrs.id}" must not have sequence flows`);
+    }
+    const jsonFormat = inputs.some((i) => i.attrs.target === 'data.response.format.type' && i.attrs.source === 'json');
+    if (jsonFormat && flows.some((fl) => /responseText/.test(child(fl, 'conditionExpression')?.text || ''))) report('error', f, `agent "${aid}" returns JSON but a gateway still reads responseText`);
   }
 
   // exclusive gateways: default flow
@@ -136,7 +160,7 @@ if (bpmn) {
   const leaked = rawBpmn.match(secretLike);
   if (leaked) report('error', f, `possible literal secret in file (matched "${leaked[0].slice(0, 6)}...")`); // never print more than the prefix
   for (const n of all(bpmn, 'input')) { // connector secrets should be {{secrets.X}} references
-    if (/(access|secret).*key|password|token/i.test(n.attrs.target || '') && n.attrs.source && !/\{\{secrets\.[A-Z0-9_]+\}\}/.test(n.attrs.source)) {
+    if (/(access|secret).*key|password|\btoken\b/i.test(n.attrs.target || '') && n.attrs.source && !/\{\{secrets\.[A-Z0-9_]+\}\}/.test(n.attrs.source)) {
       report('warn', f, `input "${n.attrs.target}" looks like a credential but is not a {{secrets.X}} reference`);
     }
   }
@@ -145,7 +169,7 @@ if (bpmn) {
   const di = all(bpmn, 'BPMNShape').concat(all(bpmn, 'BPMNEdge'));
   di.filter((d) => !elementIds.has(d.attrs.bpmnElement)).forEach((d) => report('error', f, `diagram shape "${d.attrs.id}" points at unknown element "${d.attrs.bpmnElement}"`));
   const shaped = new Set(di.map((d) => d.attrs.bpmnElement));
-  const shapeable = ['startEvent', 'endEvent', 'serviceTask', 'userTask', 'businessRuleTask', 'exclusiveGateway', 'eventBasedGateway', 'intermediateCatchEvent', 'sequenceFlow'];
+  const shapeable = ['startEvent', 'endEvent', 'serviceTask', 'userTask', 'businessRuleTask', 'exclusiveGateway', 'eventBasedGateway', 'intermediateCatchEvent', 'adHocSubProcess', 'sequenceFlow'];
   shapeable.flatMap((k) => all(process_, k)).filter((n) => n.attrs.id && !shaped.has(n.attrs.id)).forEach((n) => report('warn', f, `${n.name} "${n.attrs.id}" has no diagram shape`));
 
   // cross-file and cross-code references
