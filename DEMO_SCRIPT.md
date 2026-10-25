@@ -2,7 +2,7 @@
 
 Scenario: a journalist submits a draft article; rules and an AI check run; a human editor approves; the article publishes with a simulated failure and automatic retry. Revisions loop back inside the same instance. Everything is auditable.
 
-Status: BPMN, DMN and forms are authored and in this repo. NOT yet deployed. Frontend, mock endpoints and deployment are pending the deploy gate.
+Status: BPMN, DMN, form, frontend and mock endpoints are authored and in this repo (see README for the layout and local tests). NOT yet deployed: deployment is pending the deploy gate.
 
 ## Before you start
 - Deploy order: form -> DMN -> parent BPMN (no subprocesses, flat by design)
@@ -32,10 +32,10 @@ Problem: editorial workflows span rules, AI, people and downstream systems. Each
 
 ## S4: Resilience test (3 min, required by the PoC brief)
 1. Leave an article waiting in the editor task.
-2. Restart the job-worker service (or stop and start the app's worker process).
-3. Show the instance in Operate still in the human task, unchanged.
-4. Complete the task. The process resumes with no data loss.
-5. Be explicit: in SaaS, the Zeebe engine is Camunda-managed. We demonstrate durability by restarting our side and showing the state held in the cluster.
+2. Restart the app (stop and start `npm run dev` locally, or redeploy on Vercel). There is no job worker to restart: the connectors run in the Camunda cluster, and the app only starts processes, sends the resubmission message and hosts the mock CMS and notify endpoints.
+3. Wait for the app to be back up, then show the instance in Operate still in the human task, unchanged.
+4. Complete the task. The process resumes with no data loss. The publish call goes to the mock CMS in the app, so the app must be up before this step or the publish will retry.
+5. Be explicit: in SaaS, the Zeebe engine is Camunda-managed. We demonstrate durability by restarting our side and showing the state held in the cluster, not in the app.
 
 ## S5: Delegation (1 min)
 1. Reassign a pending editor task to another editor in Tasklist. Show it is native and requires no code.
@@ -58,4 +58,4 @@ Tie back to the PoC criteria: durable state, pause/resume, loop-back within one 
 - Approval uses native Tasklist, not a custom UI.
 - AI Agent Task template version 12 and Bedrock region/model must be verified in Web Modeler before deploy.
 - Revision reason may carry over stale across loops (PoC simplification).
-- Engine restart is demonstrated via worker restart, not an engine restart (SaaS).
+- Durability is demonstrated by restarting the app, not the engine (SaaS, engine restarts are Camunda-managed). The design has no job worker.
