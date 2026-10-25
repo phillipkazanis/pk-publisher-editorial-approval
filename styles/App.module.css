@@ -286,6 +286,16 @@
   font-size: 13px;
   color: var(--muted);
 }
+.reassign {
+  margin: 0 0 14px;
+}
+.reassign .label {
+  margin: 0;
+}
+.reassign .input {
+  width: auto;
+  min-width: 180px;
+}
 .writerFilter {
   max-width: 360px;
   margin: 0 0 4px;

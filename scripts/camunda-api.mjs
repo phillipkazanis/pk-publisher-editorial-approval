@@ -3,6 +3,7 @@
 //
 //   npm run api -- start --title "SMOKE TEST - API start" --body-file article.txt [--email who@example.com] [--writer "Alex Rivera"] [--revision-timeout PT2M] [--submission-id <id>]
 //   npm run api -- resubmit <submissionId> --title "..." --body-file revised.txt
+//   npm run api -- assign <userTaskKey> --to alice      (reassign an approval task; Tasklist cannot assign to another user)
 //
 // Needs CAMUNDA_OAUTH_URL, CAMUNDA_CLIENT_ID, CAMUNDA_CLIENT_SECRET, CAMUNDA_ZEEBE_REST_URL (and MOCK_CMS_BASE_URL for start).
 // Reads them from the environment (via .env.local). Never prints the token or any secret.
@@ -20,7 +21,7 @@ function fail(msg) {
 }
 
 const [command, ...rest] = process.argv.slice(2);
-if (!['start', 'resubmit'].includes(command)) fail('usage: npm run api -- start|resubmit [options]   (see the header of scripts/camunda-api.mjs)');
+if (!['start', 'resubmit', 'assign'].includes(command)) fail('usage: npm run api -- start|resubmit|assign [options]   (see the header of scripts/camunda-api.mjs)');
 
 const positional = [];
 const opts = {};
@@ -33,16 +34,22 @@ const required = ['CAMUNDA_OAUTH_URL', 'CAMUNDA_CLIENT_ID', 'CAMUNDA_CLIENT_SECR
 const missing = required.filter((name) => !process.env[name]);
 if (missing.length) fail(`Missing environment variables: ${missing.join(', ')}`);
 
-const bodyFile = opts['body-file'];
-if (!bodyFile) fail('--body-file is required');
-const articleBody = readFileSync(bodyFile, 'utf8').trim();
-if (!articleBody) fail('The body file is empty');
-const articleTitle = opts.title || null;
-const writer = opts.writer ? String(opts.writer).trim().slice(0, 80) || null : null; // simulated journalist, business data only
-const wordCount = articleBody.split(/\s+/).filter(Boolean).length;
+let articleBody, articleTitle, writer, wordCount, submissionId;
+if (command === 'assign') {
+  if (!positional[0] || !/^\d{1,20}$/.test(positional[0])) fail('A numeric user task key is required');
+  if (!opts.to || !/^[A-Za-z0-9._@-]{1,100}$/.test(opts.to)) fail('--to <username> is required (letters, digits and . _ @ - only)');
+} else {
+  const bodyFile = opts['body-file'];
+  if (!bodyFile) fail('--body-file is required');
+  articleBody = readFileSync(bodyFile, 'utf8').trim();
+  if (!articleBody) fail('The body file is empty');
+  articleTitle = opts.title || null;
+  writer = opts.writer ? String(opts.writer).trim().slice(0, 80) || null : null; // simulated journalist, business data only
+  wordCount = articleBody.split(/\s+/).filter(Boolean).length;
 
-const submissionId = command === 'start' ? opts['submission-id'] || randomUUID() : positional[0];
-if (!submissionId || !/^[A-Za-z0-9_-]{1,100}$/.test(submissionId)) fail('A valid submission id is required (letters, digits, - and _ only)');
+  submissionId = command === 'start' ? opts['submission-id'] || randomUUID() : positional[0];
+  if (!submissionId || !/^[A-Za-z0-9_-]{1,100}$/.test(submissionId)) fail('A valid submission id is required (letters, digits, - and _ only)');
+}
 
 const timeout = opts['revision-timeout'];
 if (timeout && !/^PT(?=\d)(\d+H)?(\d+M)?(\d+S)?$/.test(timeout)) fail('--revision-timeout must be an ISO-8601 duration such as PT2M or PT1H');
@@ -85,7 +92,15 @@ const sb = (path, method, body, prefer = 'return=minimal') =>
     ...(body === undefined ? {} : { body: JSON.stringify(body) }),
   });
 
-if (command === 'start') {
+if (command === 'assign') {
+  const res = await camunda(`/v2/user-tasks/${positional[0]}/assignment`, { assignee: opts.to, allowOverride: true });
+  console.log(`2. POST /v2/user-tasks/${positional[0]}/assignment assignee=${opts.to} (Authorization: Bearer <redacted>) -> HTTP ${res.status}`);
+  if (!res.ok) {
+    console.error(res.status === 404 ? 'Task not found. It may already be completed.' : 'Camunda rejected the assignment.');
+    process.exit(1);
+  }
+  console.log(`Reassigned task ${positional[0]} to ${opts.to}.`);
+} else if (command === 'start') {
   const variables = {
     submissionId,
     articleTitle,

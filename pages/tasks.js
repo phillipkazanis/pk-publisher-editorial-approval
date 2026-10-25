@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Layout from '../components/Layout';
+import { editorUsernames } from '../lib/editors';
 import styles from '../styles/App.module.css';
 
 const REFRESH_MS = 5000;
@@ -12,6 +13,7 @@ export default function Tasks() {
   const [busyKey, setBusyKey] = useState('');
   const [rejectingKey, setRejectingKey] = useState('');
   const [reason, setReason] = useState('');
+  const [assignTo, setAssignTo] = useState({});
 
   const load = useCallback(async () => {
     try {
@@ -60,11 +62,31 @@ export default function Tasks() {
     load();
   }
 
+  async function reassign(taskKey) {
+    const assignee = assignTo[taskKey];
+    if (!assignee) return;
+    setBusyKey(taskKey);
+    setMessage('');
+    try {
+      const r = await fetch(`/api/tasks/${taskKey}/assign`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assignee }),
+      });
+      const j = await r.json();
+      setMessage(r.ok ? `Reassigned to ${assignee}. It now appears in their Tasklist.` : `Error: ${j.error}`);
+    } catch {
+      setMessage('Error: could not reach the app.');
+    }
+    setBusyKey('');
+    load();
+  }
+
   return (
     <Layout title="Editor tasks">
       <h1 className={styles.title}>Editor tasks</h1>
       <p className={styles.intro}>
-        Articles waiting for editorial approval. To reassign a task to another editor, use Camunda Tasklist.
+        Articles waiting for editorial approval. A manager can reassign a task to another editor here; that editor then completes it in Camunda Tasklist.
       </p>
 
       {error && (
@@ -119,6 +141,24 @@ export default function Tasks() {
               </li>
             ))}
           </ul>
+
+          <div className={`${styles.actions} ${styles.reassign}`}>
+            <label className={styles.label} htmlFor={`assign-${t.taskKey}`}>Reassign to</label>
+            <select
+              id={`assign-${t.taskKey}`}
+              className={styles.input}
+              value={assignTo[t.taskKey] || ''}
+              onChange={(e) => setAssignTo({ ...assignTo, [t.taskKey]: e.target.value })}
+            >
+              <option value="">Choose an editor</option>
+              {editorUsernames().filter((u) => u !== t.assignee).map((u) => (
+                <option key={u} value={u}>{u}</option>
+              ))}
+            </select>
+            <button className={styles.btnSecondary} type="button" disabled={busyKey === t.taskKey || !assignTo[t.taskKey]} onClick={() => reassign(t.taskKey)}>
+              Reassign
+            </button>
+          </div>
 
           {rejectingKey === t.taskKey ? (
             <div>

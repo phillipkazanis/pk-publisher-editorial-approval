@@ -25,7 +25,7 @@ From the call transcript. It is an automatic transcription and unclear in places
 - **The demo is live** with the whole evaluation team, who record it themselves. The directors above them see the recording, so what is shown must make sense without the room.
 - **Priorities:** statefulness and human-in-the-loop first (functional), then AI and developer experience, then commercials.
 - **Everything can be synthetic.** Any article length, mock APIs, mock CMS. The intent is to focus on product capability, not to make the PoC heavy.
-- **Delegation:** a manager reassigning a task is enough for the demo. Pick one method to show. The written criteria should mention the other options (automated reassignment, escalation).
+- **Delegation:** a manager reassigning a task (by API, because Tasklist cannot assign to another user) is enough for the demo. Pick one method to show. The written criteria should mention the other options (automated reassignment, escalation).
 - **Pause and resume of the cluster:** a recording appeared acceptable instead of doing it live. **Confirm in writing.**
 - **Timing:** they are targeting the end of October. Time slots for the live session are to be proposed.
 - **Procurement:** they lean towards buying direct, and how easy vendor onboarding is counts. Implementation partners are separate and they have their own.
@@ -47,7 +47,7 @@ From the call transcript. It is an automatic transcription and unclear in places
 | 11 | Optional: no resubmission within a defined time marks the instance Abandoned (24 h, simulated for demo) | Timer on the event-based gateway (default `PT24H`, overridable with the `revisionTimeout` variable). Compress with `npm run api -- start ... --revision-timeout PT2M`. The instance marks the submission abandoned in Supabase, then ends at the "Abandoned" end event. The app then shows Abandoned and refuses a late resubmission. | Built, not run live |
 | 12 | Human approval via a task interface; **note which approach is used** | Native Tasklist is primary. The custom Editor tasks view is an alternative. The written summary must say both. | Verified live (Tasklist earlier; custom page on version 6) |
 | 13 | Pause from minutes to (simulated) days; state survives | The user task has no timer or timeout. The Editor tasks view shows "waiting since". Demonstrated for real by the resilience test. | Built, not run live |
-| 14 | Approver delegation: reassign a pending task to another user | Native in Tasklist (assign to another user). Needs two users in group `editors` and someone allowed to reassign. | Built, prerequisites unconfirmed |
+| 14 | Approver delegation: reassign a pending task to another user | Tasklist can claim and release but a normal user cannot assign a task to someone else (observed). So the manager reassigns by API: a Reassign control on the Editor tasks page, or `npm run api -- assign`. Needs two real users in group `editors` and an API client allowed to update user tasks. | Built and tested against the local fake only; **not run on the cluster** |
 | 15 | Rejection routes back to Revision Required | Gateway "Approved?" default flow to "Notify submitter". The native form does **not** force a reason on reject (see BPMN changes below). The custom view does. | Built, not run live |
 | 16 | Approval proceeds to publish | Gateway to the publish task. | Verified live |
 | 17 | Mock publish fails first attempt (HTTP 500); automatic retry/backoff; succeeds later | Mock CMS fails attempt 1 per submission. Task has 3 retries and a 10 s backoff. | Verified live |

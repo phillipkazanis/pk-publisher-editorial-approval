@@ -5,6 +5,7 @@
 //   POST /v2/user-tasks/search
 //   POST /v2/user-tasks/{key}/effective-variables/search
 //   POST /v2/user-tasks/{key}/completion
+//   POST /v2/user-tasks/{key}/assignment                        (reassign; allowOverride needed to take a claimed task)
 //   POST /v2/process-instances                                  (used by scripts/camunda-api.mjs)
 //   POST /v2/messages/publication                               (used by scripts/camunda-api.mjs)
 //   GET  /_state                                                (test helper: what was completed and with which variables)
@@ -23,6 +24,7 @@ const tasks = new Map([
   ['2251799813685302', { assignee: 'editor1', creationDate: '2026-10-25T05:20:00.000Z', processInstanceKey: '2251799813685202', vars: { submissionId: 'fake-submission-2', submittedBy: 'Sam Okafor', articleTitle: '[FAKE] Storm warning issued', articleBody: 'The weather bureau has issued a severe storm warning for the region.', wordCount: 12, submitterEmail: 'journalist@example.invalid', complianceResult: { verdict: 'PASS', reason: 'Passed deterministic rules' }, aiComplianceResult: { responseJson: { verdict: 'PASS', reasons: [], warnings: [], suggestedFixes: [], rulesChecked: ['TN-1'] } } } }],
 ]);
 const completed = [];
+const assignments = [];
 const started = [];
 const messages = [];
 
@@ -45,7 +47,7 @@ const server = createServer(async (req, res) => {
   const raw = await readBody(req);
   console.log(`${req.method} ${url.pathname}${url.search}`);
 
-  if (req.method === 'GET' && url.pathname === '/_state') return send(res, 200, { open: [...tasks.keys()], completed, started, messages });
+  if (req.method === 'GET' && url.pathname === '/_state') return send(res, 200, { open: [...tasks.keys()], completed, assignments, started, messages });
 
   if (req.method === 'POST' && url.pathname === '/oauth/token') {
     const form = new URLSearchParams(raw);
@@ -92,7 +94,7 @@ const server = createServer(async (req, res) => {
     return send(res, 200, { items, page: { totalItems: items.length } });
   }
 
-  const m = url.pathname.match(/^\/v2\/user-tasks\/(\d+)\/(effective-variables\/search|completion)$/);
+  const m = url.pathname.match(/^\/v2\/user-tasks\/(\d+)\/(effective-variables\/search|completion|assignment)$/);
   if (req.method === 'POST' && m) {
     const [, key, action] = m;
     const task = tasks.get(key);
@@ -101,6 +103,13 @@ const server = createServer(async (req, res) => {
       if (url.searchParams.get('truncateValues') !== 'false') return problem(res, 400, 'expected truncateValues=false');
       const items = Object.entries(task.vars).map(([name, value]) => ({ name, value: JSON.stringify(value), isTruncated: false, processInstanceKey: task.processInstanceKey }));
       return send(res, 200, { items, page: { totalItems: items.length } });
+    }
+    if (action === 'assignment') {
+      if (typeof body.assignee !== 'string' || !body.assignee) return problem(res, 400, 'assignee is required');
+      if (task.assignee && task.assignee !== body.assignee && body.allowOverride !== true) return problem(res, 409, 'task is already assigned; set allowOverride');
+      assignments.push({ key, from: task.assignee, to: body.assignee, allowOverride: body.allowOverride === true });
+      task.assignee = body.assignee;
+      return send(res, 204);
     }
     const v = body.variables || {};
     if (!['APPROVE', 'REJECT'].includes(v.approvalDecision)) return problem(res, 400, 'approvalDecision must be APPROVE or REJECT');

@@ -26,10 +26,10 @@ The customer's stated priorities were statefulness and human-in-the-loop first, 
 |---|---|---|
 | Identity provider login for task completion (for example Okta) | Not demonstrable without the customer's provider | Written |
 | Mobile and responsive access | The custom task list and every demo page work at phone width. The native task UI is not checked | Partly |
-| Task assignment logic (role, rule, dynamic, escalation) | Candidate group `editors`; a manager reassigns a task. Rule-based and dynamic assignment not shown | Partly |
+| Task assignment logic (role, rule, dynamic, escalation) | Candidate group `editors`; a manager reassigns a task by API (Tasklist cannot assign to another user). Rule-based and dynamic assignment not shown | Partly |
 | SLA and escalation management | Not in the scenario; a reminder and escalation timer on the approval task is a small extension | Written (or build) |
 | Licensing of human task features | Not a PoC matter | Written |
-| Delegation (from the call) | One method, a manager reassigning, was agreed as enough | Plan |
+| Delegation (from the call) | One method, a manager reassigning, was agreed as enough. Built as an API call (Editor tasks control or script); not yet run on the cluster | Plan |
 
 ## AI and Agentic Workflow (priority)
 | Criterion | PoC evidence | Status |

@@ -35,7 +35,7 @@ Behaviour that is **configuration, not code**: durable waiting, message correlat
 | Revision Required, same instance, reason sent | Waiting state until a resubmission message; reason and suggested fixes sent; loop back to the check | Run on cluster: reasons and fixes sent, waiting in the same instance, loop back with the new text (a defect where it was ignored was found and fixed) |
 | Optional timeout to Abandoned | Timer on the waiting state; compressible for demo; marks the submission abandoned | **[PENDING run on cluster]** |
 | Human approval, note which approach | Native Tasklist, plus an API-driven task list as an embedding example | Run on cluster: Tasklist approvals (earlier version), and an approval through the API-driven page on the current version |
-| Delegation | A manager reassigns a pending task (one method, as agreed) | **[PENDING run on cluster]** |
+| Delegation | A manager reassigns a pending task by API, from a control on the task list or a script (one method, as agreed); the new assignee completes it in Tasklist | **[PENDING run on cluster]** |
 | Mock publish fails once, automatic retry | Per-step retries and backoff | Run on cluster |
 | Complete, with full audit trail including AI input and output | Operate history; the agent's conversation, tool calls and verdict are held with the instance | Visible in Operate. The approver is recorded for Tasklist approvals and empty for API-completed ones |
 | Engine restart during the approval wait | Recorded separately, as discussed on the call | **[PENDING recording]** |
@@ -47,7 +47,7 @@ Behaviour that is **configuration, not code**: durable waiting, message correlat
 - **The AI step is an addition beyond a single call**: a bounded agent loop with tools, included to show the agent pattern.
 - **Human approval:** the native Tasklist is the governed path. The API-driven task list shows tasks can be embedded in the customer's own tools, but it completes tasks through the API client, so the history shows the client rather than the person. It is a demonstration, not a recommendation.
 - **The demo web form's own endpoint is not OAuth-protected.** The platform's API is.
-- **Delegation:** one method is shown (manager reassignment). Automated reassignment and escalation are covered in the written criteria responses.
+- **Delegation:** one method is shown (manager reassignment). Tasklist lets a user claim a task but not assign it to another user, so the reassignment is an API call and the history records the API client for that step; the assignee is recorded when they complete the task. Automated reassignment and escalation are covered in the written criteria responses.
 
 ## 6. Not demonstrated, and why
 - **SLA and escalation on human tasks, role-based and rule-based assignment:** not in the scenario. Covered in the written criteria. A reminder and escalation timer on the approval task is a small extension.

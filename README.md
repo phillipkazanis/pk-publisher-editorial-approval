@@ -49,7 +49,7 @@ A header nav switches between four views:
 
 - **Submit** (`/`): journalists submit an article. A progress card for the latest submission shows Submitted, In review and Published, with a revision-requested flag that links to Revisions.
 - **Revisions** (`/revisions`): articles sent back for a revised version, one row each with the round, a short reason and a Revise button. Revise opens the full reason and an editor with the last saved text; Resubmit continues the same process instance.
-- **Editor tasks** (`/tasks`): lists open `Editorial approval` tasks for the `editors` group, with the article and the rules and AI check results. Approve completes the task; Reject needs a reason and sends the article back for revision. It uses `POST /v2/user-tasks/search`, `.../{key}/effective-variables/search` and `.../{key}/completion`.
+- **Editor tasks** (`/tasks`): lists open `Editorial approval` tasks for the `editors` group, with the article and the rules and AI check results. Approve completes the task; Reject needs a reason and sends the article back for revision. **Reassign to** hands a task to another editor. It uses `POST /v2/user-tasks/search`, `.../{key}/effective-variables/search`, `.../{key}/completion` and `.../{key}/assignment`.
 - **Admin** (`/admin`): a KPI strip (first-pass rate, average revision rounds, median time to publish, publish retries, abandonment, calculated from the app's record of each submission) and recent submissions with status, publish attempts, notification count and instance key, refreshed every few seconds. It complements Operate: for step-by-step history, variables and the AI input and output, open the instance in Operate.
 
 Things to know:
@@ -100,7 +100,7 @@ npm run api -- start --title "SMOKE TEST - timeout" --body-file docs/samples/rev
 npm run api -- resubmit <submissionId> --title "SMOKE TEST - API start" --body-file docs/samples/clean-article.txt
 ```
 
-Add `--writer "Priya Nair"` to start it as a simulated writer.
+Add `--writer "Priya Nair"` to start it as a simulated writer. Reassign an approval task with `npm run api -- assign <userTaskKey> --to alice` (Tasklist cannot assign a task to another user; the Editor tasks page has the same control, with the names from `lib/editors.js`).
 
 It needs the `CAMUNDA_*` values and `MOCK_CMS_BASE_URL` in `.env.local`, prints each HTTP step with the bearer token redacted, and never prints the token or secret. `--revision-timeout` (an ISO duration such as `PT2M`) compresses the 24-hour abandon timer for a demo. It starts a **real** process instance on whatever cluster `.env.local` points at; try it against `npm run fake:camunda` first.
 
