@@ -14,7 +14,7 @@
       </input>
       <input id="Input_HasBanned" label="Contains banned terms">
         <inputExpression id="InputExpr_HasBanned" typeRef="boolean">
-          <text>count(bannedWordsResult.body.word[contains(lower case(articleBody), item)]) &gt; 0</text>
+          <text>count(bannedWordsResult.body.word[contains(lower case(articleBody), lower case(item))]) &gt; 0</text>
         </inputExpression>
       </input>
       <input id="Input_HasHeadline" label="Headline present">
