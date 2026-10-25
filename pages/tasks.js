@@ -4,10 +4,6 @@ import styles from '../styles/App.module.css';
 
 const REFRESH_MS = 5000;
 
-function firstLine(text) {
-  return (text || '').split('\n')[0].trim();
-}
-
 export default function Tasks() {
   const [tasks, setTasks] = useState(null);
   const [error, setError] = useState('');
@@ -108,9 +104,15 @@ export default function Tasks() {
               {t.rulesReason ? ` (${t.rulesReason})` : ''}
             </li>
             <li>
-              AI tone check:{' '}
-              <span className={/VERDICT:\s*PASS/i.test(t.aiVerdict || '') ? styles.checkOk : styles.checkFail}>{firstLine(t.aiVerdict) || 'n/a'}</span>
+              AI compliance review:{' '}
+              <span className={/PASS/i.test(t.aiVerdict || '') ? styles.checkOk : styles.checkFail}>{t.aiVerdict || 'n/a'}</span>
+              {t.aiRulesChecked.length ? ` (style rules checked: ${t.aiRulesChecked.join(', ')})` : ''}
             </li>
+            {t.aiWarnings.map((w, i) => (
+              <li key={`w${i}`}>
+                <span className={styles.checkFail}>Warning:</span> {w}
+              </li>
+            ))}
           </ul>
 
           {rejectingKey === t.taskKey ? (

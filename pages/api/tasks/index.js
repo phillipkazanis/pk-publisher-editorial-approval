@@ -40,6 +40,9 @@ export default async function handler(req, res) {
         } catch {
           variablesError = true;
         }
+        const ai = vars.aiComplianceResult || {};
+        const aiJson = ai.responseJson && typeof ai.responseJson === 'object' ? ai.responseJson : null;
+        const strings = (v) => (Array.isArray(v) ? v.filter((x) => typeof x === 'string') : []);
         return {
           taskKey: String(t.userTaskKey),
           processInstanceKey: String(t.processInstanceKey),
@@ -51,7 +54,11 @@ export default async function handler(req, res) {
           wordCount: vars.wordCount ?? null,
           rulesVerdict: vars.complianceResult?.verdict || null,
           rulesReason: vars.complianceResult?.reason || null,
-          aiVerdict: typeof vars.aiComplianceResult?.responseText === 'string' ? vars.aiComplianceResult.responseText : null,
+          // The compliance agent returns structured JSON; older instances returned plain text.
+          aiVerdict: aiJson?.verdict || (typeof ai.responseText === 'string' ? ai.responseText.split('\n')[0].trim() : null),
+          aiReasons: strings(aiJson?.reasons),
+          aiWarnings: strings(aiJson?.warnings),
+          aiRulesChecked: strings(aiJson?.rulesChecked),
           variablesError,
         };
       })
