@@ -1,0 +1,11 @@
+# Secrets (keep .env.example tracked)
+.env
+.env.*
+!.env.example
+
+# Dependencies and build output
+node_modules/
+.next/
+
+# OS
+.DS_Store
