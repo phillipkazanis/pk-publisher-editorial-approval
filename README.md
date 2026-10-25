@@ -26,8 +26,15 @@ Camunda 8 demo: editorial content approval with AI compliance check, human appro
 | `scripts/smoke-test.mjs` | Local API smoke test |
 | `scripts/lint-camunda.mjs` | Lint for the files in `camunda/` |
 | `pages/api/brand/logo.js`, `scripts/upload-logo.mjs` | Serves the logo from a private Supabase Storage bucket, and the one-time upload script |
+| `docs/sql/style-rules.sql` | Style guide table and read-only view used by the compliance agent's tool (applied to Supabase; re-runnable) |
 | `scripts/camunda-api.mjs`, `docs/samples/` | Starts or resubmits an article straight through the Camunda REST API with an OAuth 2.0 client-credentials token (`npm run api`), and sample article texts for it |
 | `scripts/fake-camunda.mjs` | Tiny local stand-in for the few Camunda endpoints the Editor tasks view uses (not a real engine) |
+
+## The AI compliance agent
+
+The AI step in `camunda/publisher_editorial_approval.bpmn` is an **AI Agent sub-process**: an ad-hoc sub-process run by the AI Agent connector (v2, Camunda 8.10 and later), not a single LLM call. It has two read-only tools (banned terms, and style guide rules by topic from Supabase), loops up to 6 model calls, and returns a structured verdict with reasons, warnings, suggested fixes and the rules it checked. The DMN rules still run first. Details, the governance points and the checks to run on the cluster are in [docs/poc-checklist.md](docs/poc-checklist.md). Sample articles for it are in `docs/samples/`: `clean-article.txt` (passes), `revision-article.txt` (fails the DMN rules), `ai-check-article.txt` (passes the rules, should fail the agent) and `injection-article.txt` (tries to instruct the AI reviewer).
+
+This is the only element that breaks the "flat process" convention, on purpose, because an AI Agent sub-process has to be an ad-hoc sub-process. The linter allows it only for that connector and checks that the loop is bounded and each tool is documented and has no sequence flows.
 
 ## Views
 
