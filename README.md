@@ -12,7 +12,8 @@ Camunda 8 demo: editorial content approval with AI compliance check, human appro
 | Path | What it is |
 |------|------------|
 | `camunda/` | **Web Modeler Git Sync folder.** The current BPMN, DMN and form live here. Edit them in Web Modeler, not by hand. |
-| `pages/index.js` | Submission and resubmission form |
+| `pages/index.js`, `pages/_app.js`, `styles/` | Submission and resubmission form, styled as a news-portal page (placeholder text only) |
+| `pages/api/submission-status.js` | Read-only: returns a submission's status for the red status strip |
 | `pages/api/start-process.js` | Starts a process instance (calls the Camunda cluster) |
 | `pages/api/resubmit.js` | Publishes the `publisher-approval-resubmitted` message (calls the Camunda cluster) |
 | `pages/api/mock-cms/publish.js` | Mock CMS: fails the first publish attempt per submission, succeeds on the second |
@@ -28,7 +29,9 @@ Camunda 8 demo: editorial content approval with AI compliance check, human appro
    - `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are needed by the mock CMS, the notify route and the smoke test.
    - `CAMUNDA_*` values are only needed for `/api/start-process` and `/api/resubmit`, which are not used until the deploy gate is cleared.
    - `MOCK_CMS_BASE_URL` is `http://localhost:3000` locally.
-3. `npm run dev` and open http://localhost:3000. The form page loads without any secrets.
+   - Optional branding (public, not secret): `NEXT_PUBLIC_BRAND_NAME` (default "Editorial Console") and `NEXT_PUBLIC_BRAND_LOGO` (default empty, which shows a text wordmark). The logo is never stored in the repo: `public/brand/` is git-ignored, so a file there works locally but is **not deployed from GitHub**. On Vercel, set `NEXT_PUBLIC_BRAND_LOGO` to an absolute https URL.
+   - `NEXT_PUBLIC_SHOW_TEST_BUTTON=true` shows the "Load test article" buttons. Keep it off on production unless the demo is running.
+3. `npm run dev` and open http://localhost:3000. The form page loads without any secrets. `NEXT_PUBLIC_*` values are read at build and dev-server start, so restart after changing them.
 
 ## Local tests
 
