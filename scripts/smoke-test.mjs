@@ -178,6 +178,9 @@ async function run() {
   const getAssign = await fetch(`${BASE_URL}/api/tasks/2251799813685301/assign`);
   check('reassign rejects a bad task key and a bad assignee (400) and only accepts POST (405)', badKey.status === 400 && badAssignee.status === 400 && getAssign.status === 405, `${badKey.status}/${badAssignee.status}/${getAssign.status}`);
 
+  const badViewer = await fetch(`${BASE_URL}/api/tasks?viewer=${encodeURIComponent('not a username!')}`);
+  check('tasks API rejects a malformed viewer (400) before calling Camunda', badViewer.status === 400, `status ${badViewer.status}`);
+
   // 3f. The AI service contract stand-in (no model, no data): verdicts, validation and the simulated error cases
   const ai = (article, extraHeaders) =>
     fetch(`${BASE_URL}/api/llm-ops/compliance-check`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(extraHeaders || {}) }, body: JSON.stringify({ article, context: { submissionId: 'smoke', round: 1 } }) });

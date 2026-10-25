@@ -86,7 +86,8 @@ const server = createServer(async (req, res) => {
   if (req.method === 'POST' && url.pathname === '/v2/user-tasks/search') {
     const f = body.filter || {};
     if (f.state !== 'CREATED' || f.candidateGroup !== 'editors' || f.elementId !== 'Task_EditorialApproval') return problem(res, 400, 'unexpected filter');
-    const items = [...tasks.entries()].map(([userTaskKey, t]) => ({
+    if (f.assignee !== undefined && typeof f.assignee !== 'string') return problem(res, 400, 'unexpected assignee filter');
+    const items = [...tasks.entries()].filter(([, t]) => f.assignee === undefined || t.assignee === f.assignee).map(([userTaskKey, t]) => ({
       userTaskKey, name: 'Editorial approval', state: 'CREATED', assignee: t.assignee, elementId: 'Task_EditorialApproval',
       candidateGroups: ['editors'], candidateUsers: [], processDefinitionId: 'publisherEditorialApproval', creationDate: t.creationDate,
       processInstanceKey: t.processInstanceKey, tenantId: '<default>',

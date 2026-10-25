@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Layout from '../components/Layout';
 import { useLimits } from '../components/WordCount';
-import { editorUsernames } from '../lib/editors';
+import ViewerSelect, { useViewer } from '../components/ViewerSelect';
+import { MANAGER, editorUsernames } from '../lib/editors';
 import styles from '../styles/App.module.css';
 
 const REFRESH_MS = 5000;
@@ -45,10 +46,12 @@ export default function Tasks() {
   const [reason, setReason] = useState('');
   const [assignTo, setAssignTo] = useState({});
   const limits = useLimits();
+  const [viewer, setViewer] = useViewer();
+  const isManager = viewer === MANAGER;
 
   const load = useCallback(async () => {
     try {
-      const r = await fetch('/api/tasks');
+      const r = await fetch(`/api/tasks?viewer=${encodeURIComponent(viewer)}`);
       const j = await r.json();
       if (!r.ok) {
         setError(j.error || 'Could not load tasks.');
@@ -61,9 +64,10 @@ export default function Tasks() {
       setError('Could not reach the app.');
       setTasks([]);
     }
-  }, []);
+  }, [viewer]);
 
   useEffect(() => {
+    setTasks(null);
     load();
     const timer = setInterval(load, REFRESH_MS);
     return () => clearInterval(timer);
@@ -105,7 +109,7 @@ export default function Tasks() {
         body: JSON.stringify({ assignee }),
       });
       const j = await r.json();
-      setMessage(r.ok ? `Reassigned to ${assignee}. It now appears in their Tasklist.` : `Error: ${j.error}`);
+      setMessage(r.ok ? `Assigned to ${assignee}. It now appears in their list and in their Tasklist.` : `Error: ${j.error}`);
     } catch {
       setMessage('Error: could not reach the app.');
     }
@@ -117,8 +121,10 @@ export default function Tasks() {
     <Layout title="Editor tasks">
       <h1 className={styles.title}>Editor tasks</h1>
       <p className={styles.intro}>
-        Articles waiting for editorial approval. A manager can reassign a task to another editor here; that editor then completes it in Camunda Tasklist.
+        Articles waiting for editorial approval. The manager assigns work; an editor sees only the tasks assigned to them, decides on them, and can hand one to
+        another editor (for example when going on leave).
       </p>
+      <ViewerSelect value={viewer} onChange={(v) => { setViewer(v); setMessage(''); setRejectingKey(''); }} />
 
       {error && (
         <p className={styles.notice} role="alert">
@@ -135,7 +141,9 @@ export default function Tasks() {
       {tasks && !tasks.length && !error && (
         <section className={styles.card}>
           <p className={styles.empty}>
-            No articles are waiting for approval. An article reaches an editor only after it passes both the rules check and the AI review.
+            {isManager
+              ? 'No articles are waiting for approval. An article reaches an editor only after it passes both the rules check and the AI review.'
+              : `Nothing is assigned to ${viewer}. The manager assigns tasks.`}{' '}
             Articles that failed a check are under <Link href="/revisions">Revisions</Link>.
           </p>
         </section>
@@ -207,7 +215,7 @@ export default function Tasks() {
           )}
 
           <div className={`${styles.actions} ${styles.reassign}`}>
-            <label className={styles.label} htmlFor={`assign-${t.taskKey}`}>Reassign to</label>
+            <label className={styles.label} htmlFor={`assign-${t.taskKey}`}>{t.assignee ? 'Reassign to' : 'Assign to'}</label>
             <select
               id={`assign-${t.taskKey}`}
               className={styles.input}
@@ -215,16 +223,20 @@ export default function Tasks() {
               onChange={(e) => setAssignTo({ ...assignTo, [t.taskKey]: e.target.value })}
             >
               <option value="">Choose an editor</option>
-              {editorUsernames().filter((u) => u !== t.assignee).map((u) => (
+              {editorUsernames().filter((u) => u !== t.assignee && u !== viewer).map((u) => (
                 <option key={u} value={u}>{u}</option>
               ))}
             </select>
             <button className={styles.btnSecondary} type="button" disabled={busyKey === t.taskKey || !assignTo[t.taskKey]} onClick={() => reassign(t.taskKey)}>
-              Reassign
+              {t.assignee ? 'Reassign' : 'Assign'}
             </button>
           </div>
 
-          {rejectingKey === t.taskKey ? (
+          {isManager ? (
+            <p className={styles.taskMeta}>
+              {t.assignee ? `${t.assignee} decides on this task.` : 'Assign it to an editor. The assigned editor decides.'}
+            </p>
+          ) : rejectingKey === t.taskKey ? (
             <div>
               <label className={styles.label} htmlFor={`reason-${t.taskKey}`}>Reason for revision (shown to the submitter)</label>
               <textarea

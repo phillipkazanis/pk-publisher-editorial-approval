@@ -1,5 +1,6 @@
 import { camundaRequest, missingCamundaEnv } from '../../../lib/camunda-auth';
 import { articleStats } from '../../../lib/article-stats';
+import { MANAGER, isValidAssignee } from '../../../lib/editors';
 
 const EDITOR_GROUP = 'editors';
 const APPROVAL_ELEMENT_ID = 'Task_EditorialApproval';
@@ -24,12 +25,15 @@ async function variablesFor(taskKey) {
 // Lists open editorial approval tasks for the editors group, with the article and check results.
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).end();
+  // ?viewer=<username> returns only the tasks assigned to that editor; no viewer (or the manager) returns every open task.
+  const viewer = typeof req.query.viewer === 'string' ? req.query.viewer : MANAGER;
+  if (viewer !== MANAGER && !isValidAssignee(viewer)) return res.status(400).json({ error: 'viewer must be a username' });
   const missing = missingCamundaEnv();
   if (missing.length) return res.status(503).json({ error: 'Camunda is not configured for this app.', missing });
 
   try {
     const found = await camundaRequest('/v2/user-tasks/search', {
-      filter: { state: 'CREATED', candidateGroup: EDITOR_GROUP, elementId: APPROVAL_ELEMENT_ID },
+      filter: { state: 'CREATED', candidateGroup: EDITOR_GROUP, elementId: APPROVAL_ELEMENT_ID, ...(viewer !== MANAGER ? { assignee: viewer } : {}) },
       page: { limit: 50 },
     });
     const tasks = await Promise.all(
