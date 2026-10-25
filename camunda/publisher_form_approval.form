@@ -3,35 +3,100 @@
     {
       "label": "Headline",
       "type": "textfield",
-      "layout": { "row": "Row_Title", "columns": null },
+      "layout": {
+        "row": "Row_Title",
+        "columns": null
+      },
       "id": "Field_ArticleTitle",
       "key": "articleTitle",
       "disabled": true
     },
     {
+      "type": "text",
+      "id": "Text_Meta",
+      "text": "=\"**Written by:** \" + (if submittedBy != null then submittedBy else \"unknown\") + \"  |  **Words:** \" + (if wordCount != null then string(wordCount) else \"n/a\") + \"  |  **Revision round:** \" + string((if revisionRound != null then revisionRound else 0) + 1)",
+      "layout": {
+        "row": "Row_Meta",
+        "columns": null
+      }
+    },
+    {
+      "type": "text",
+      "id": "Text_Summary",
+      "text": "=if aiComplianceResult.responseJson.summary != null and aiComplianceResult.responseJson.summary != \"\" then \"**Summary (AI, for the editor)**\n\n\" + aiComplianceResult.responseJson.summary else \"\"",
+      "layout": {
+        "row": "Row_Summary",
+        "columns": null
+      }
+    },
+    {
       "label": "Article body",
       "type": "textarea",
-      "layout": { "row": "Row_Body", "columns": null },
+      "layout": {
+        "row": "Row_Body",
+        "columns": null
+      },
       "id": "Field_ArticleBody",
       "key": "articleBody",
       "disabled": true
     },
     {
+      "type": "text",
+      "id": "Text_Checks",
+      "text": "=\"**Rules check:** \" + (if complianceResult.verdict != null then complianceResult.verdict else \"n/a\") + (if complianceResult.reason != null then \" (\" + complianceResult.reason + \")\" else \"\") + \"\n\n**AI compliance review:** \" + (if aiComplianceResult.responseJson.verdict != null then aiComplianceResult.responseJson.verdict else \"n/a\") + (if count(aiComplianceResult.responseJson.rulesChecked) > 0 then \" (style rules checked: \" + string join(aiComplianceResult.responseJson.rulesChecked, \", \") + \")\" else \"\")",
+      "layout": {
+        "row": "Row_Checks",
+        "columns": null
+      }
+    },
+    {
+      "type": "text",
+      "id": "Text_Warnings",
+      "text": "=if count(aiComplianceResult.responseJson.warnings) > 0 then \"**Warnings**\n\n- \" + string join(aiComplianceResult.responseJson.warnings, \"\n- \") else \"\"",
+      "layout": {
+        "row": "Row_Warnings",
+        "columns": null
+      }
+    },
+    {
+      "type": "text",
+      "id": "Text_Claims",
+      "text": "=if count(aiComplianceResult.responseJson.claimsNeedingSources) > 0 then \"**Claims with no named source (check before approving)**\n\n- \" + string join(aiComplianceResult.responseJson.claimsNeedingSources, \"\n- \") else \"\"",
+      "layout": {
+        "row": "Row_Claims",
+        "columns": null
+      }
+    },
+    {
       "label": "Editorial decision",
       "type": "radio",
-      "layout": { "row": "Row_Decision", "columns": null },
+      "layout": {
+        "row": "Row_Decision",
+        "columns": null
+      },
       "id": "Field_ApprovalDecision",
       "key": "approvalDecision",
-      "validate": { "required": true },
+      "validate": {
+        "required": true
+      },
       "values": [
-        { "label": "Approve for publication", "value": "APPROVE" },
-        { "label": "Reject - request revision", "value": "REJECT" }
+        {
+          "label": "Approve for publication",
+          "value": "APPROVE"
+        },
+        {
+          "label": "Reject - request revision",
+          "value": "REJECT"
+        }
       ]
     },
     {
       "label": "Reason for revision (shown to submitter)",
       "type": "textarea",
-      "layout": { "row": "Row_Reason", "columns": null },
+      "layout": {
+        "row": "Row_Reason",
+        "columns": null
+      },
       "id": "Field_RevisionReason",
       "key": "revisionReason"
     }
@@ -40,6 +105,9 @@
   "id": "publisher_form_approval",
   "executionPlatform": "Camunda Cloud",
   "executionPlatformVersion": "8.10.0",
-  "exporter": { "name": "Claude (hand-authored)", "version": "1.0" },
+  "exporter": {
+    "name": "Claude (hand-authored)",
+    "version": "1.0"
+  },
   "schemaVersion": 16
 }

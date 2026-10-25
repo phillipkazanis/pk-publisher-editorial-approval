@@ -405,6 +405,34 @@
 }
 
 /* Editor tasks */
+.subTitle {
+  margin: 14px 0 6px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.summaryText {
+  margin: 0 0 12px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 8px 16px;
+  margin: 0 0 14px;
+}
+.stat dt {
+  font-size: 12px;
+  color: var(--muted);
+}
+.stat dd {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
 .taskMeta {
   margin: 0 0 12px;
   font-size: 13px;

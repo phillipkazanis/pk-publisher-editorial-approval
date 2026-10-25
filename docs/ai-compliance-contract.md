@@ -3,7 +3,7 @@
 ## Why this exists
 The customer's operating model, as stated in the PoC brief, is that a separate team owns all AI and LLM build and exposes it through APIs. The orchestration layer's job is to *consume* AI as a governed step, not to host the team's models or prompts. So the process should depend on a **contract**, not on a model.
 
-The contract is in [ai-compliance-check.openapi.yaml](ai-compliance-check.openapi.yaml): an article goes in, a structured verdict comes out (`verdict`, `reasons`, `warnings`, `suggestedFixes`, `rulesChecked`, plus model id and request id for audit). Calls are OAuth 2.0 client-credentials secured and carry an idempotency key.
+The contract is in [ai-compliance-check.openapi.yaml](ai-compliance-check.openapi.yaml): an article goes in, a structured verdict comes out (`verdict`, `reasons`, `warnings`, `suggestedFixes`, `rulesChecked`, plus a neutral `summary` and a list of `claimsNeedingSources` for the human reviewer, and model id and request id for audit). Calls are OAuth 2.0 client-credentials secured and carry an idempotency key.
 
 ## Two implementations, one contract
 

@@ -60,6 +60,7 @@ Behaviour that is **configuration, not code**: durable waiting, message correlat
 ## 7. What this means in practice
 - **State lives in the process.** One history per article across every revision, so rework rate, time to publish and abandonment can be measured.
 - **Running work keeps the version it started on.** Changing a process definition does not disturb articles in flight, and migration is a deliberate step. The demo shows instances on different versions side by side.
+- **The editor is briefed, not just asked.** The approval task carries the writer, a neutral AI summary, the rules and AI results, warnings and claims that name no source, so the decision is informed. The AI flags missing attribution only; it does not judge truth, and it cannot cause a FAIL on its own.
 - **AI is a governed step.** Rules run first, a person decides last, the loop is bounded, and the input, output, model and rules checked are kept with the instance.
 - **Open standards.** BPMN 2.0, DMN, OAuth 2.0 and Git. The files in the repository are the deliverable.
 

@@ -1,10 +1,40 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Layout from '../components/Layout';
+import { useLimits } from '../components/WordCount';
 import { editorUsernames } from '../lib/editors';
 import styles from '../styles/App.module.css';
 
 const REFRESH_MS = 5000;
+const fmt = (n) => Number(n).toLocaleString('en-AU');
+
+function Stat({ label, value, warn }) {
+  return (
+    <div className={styles.stat}>
+      <dt>{label}</dt>
+      <dd className={warn ? styles.checkFail : ''}>{value}</dd>
+    </div>
+  );
+}
+
+// Plain facts about the text, calculated from the article. Information for the editor, not a judgement.
+function ArticleStats({ stats, limits }) {
+  const over = limits?.maxWordCount && stats.words > limits.maxWordCount;
+  const under = limits?.minWordCount && stats.words < limits.minWordCount;
+  const limitNote = over ? ` (${fmt(stats.words - limits.maxWordCount)} over the ${fmt(limits.maxWordCount)} maximum)` : under ? ` (${fmt(limits.minWordCount - stats.words)} under the ${fmt(limits.minWordCount)} minimum)` : '';
+  return (
+    <dl className={styles.stats} aria-label="Article statistics">
+      <Stat label="Words" value={`${fmt(stats.words)}${limitNote}`} warn={over || under} />
+      <Stat label="Read time" value={`${stats.readMinutes} min`} />
+      <Stat label="Paragraphs" value={fmt(stats.paragraphs)} />
+      <Stat label="Sentences" value={`${fmt(stats.sentences)} (avg ${stats.avgSentenceWords} words, longest ${stats.longestSentenceWords})`} />
+      <Stat label="Quotations" value={fmt(stats.quotes)} />
+      <Stat label="Attribution phrases" value={fmt(stats.attributions)} />
+      <Stat label="Figures" value={fmt(stats.figures)} />
+      <Stat label="Headline" value={`${stats.headlineWords} words, ${stats.headlineChars} characters`} />
+    </dl>
+  );
+}
 
 export default function Tasks() {
   const [tasks, setTasks] = useState(null);
@@ -14,6 +44,7 @@ export default function Tasks() {
   const [rejectingKey, setRejectingKey] = useState('');
   const [reason, setReason] = useState('');
   const [assignTo, setAssignTo] = useState({});
+  const limits = useLimits();
 
   const load = useCallback(async () => {
     try {
@@ -115,15 +146,23 @@ export default function Tasks() {
           <h2 className={styles.cardTitle}>{t.articleTitle || '(no headline)'}</h2>
           <p className={styles.taskMeta}>
             {t.submittedBy ? `Written by ${t.submittedBy} · ` : ''}
-            {t.wordCount != null ? `${t.wordCount} words · ` : ''}
+            {t.revisionRound > 1 ? `Revision round ${t.revisionRound} · ` : ''}
             {t.assignee ? `Assigned to ${t.assignee} · ` : 'Unassigned · '}
             Waiting since {new Date(t.created).toLocaleString('en-AU')}
           </p>
+          {t.aiSummary && (
+            <>
+              <h3 className={styles.subTitle}>Summary (AI, for the editor)</h3>
+              <p className={styles.summaryText}>{t.aiSummary}</p>
+            </>
+          )}
+          {!t.variablesError && t.stats && <ArticleStats stats={t.stats} limits={limits} />}
           {t.variablesError ? (
             <p className={styles.notice}>The article text could not be loaded for this task. Review it in Camunda Tasklist.</p>
           ) : (
             <pre className={styles.articleBody}>{t.articleBody}</pre>
           )}
+          <h3 className={styles.subTitle}>Checks</h3>
           <ul className={styles.checks}>
             <li>
               Rules check:{' '}
@@ -140,7 +179,32 @@ export default function Tasks() {
                 <span className={styles.checkFail}>Warning:</span> {w}
               </li>
             ))}
+            {t.aiReasons.map((r, i) => (
+              <li key={`r${i}`}>
+                <span className={styles.checkFail}>Reason:</span> {r}
+              </li>
+            ))}
           </ul>
+          {t.claimsNeedingSources.length > 0 && (
+            <>
+              <h3 className={styles.subTitle}>Claims with no named source (check before approving)</h3>
+              <ul className={styles.checks}>
+                {t.claimsNeedingSources.map((c, i) => (
+                  <li key={`c${i}`}>{c}</li>
+                ))}
+              </ul>
+            </>
+          )}
+          {t.aiSuggestedFixes.length > 0 && (
+            <>
+              <h3 className={styles.subTitle}>AI suggestions</h3>
+              <ul className={styles.checks}>
+                {t.aiSuggestedFixes.map((f, i) => (
+                  <li key={`f${i}`}>{f}</li>
+                ))}
+              </ul>
+            </>
+          )}
 
           <div className={`${styles.actions} ${styles.reassign}`}>
             <label className={styles.label} htmlFor={`assign-${t.taskKey}`}>Reassign to</label>

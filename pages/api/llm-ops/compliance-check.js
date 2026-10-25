@@ -12,6 +12,20 @@ const ATTRIBUTION = /\b(according to|alleged(ly)?|accused|reportedly|(council|po
 const SENSATIONAL = /\b(disgusting|doomed|disaster|horrific|outrageous|useless|shameful)\b/i;
 const ADVOCACY = /\b(sack the|the answer (here )?is simple|betrayal)\b/i;
 
+// Neutral stand-ins for the agent's editor notes: the opening of the article, and sentences that state a figure
+// or a strong claim without naming a source.
+const summaryOf = (text) => {
+  const first = text.trim().split(/(?<=[.!?])\s+/).slice(0, 2).join(' ');
+  return first.length > 300 ? first.slice(0, 297) + '...' : first;
+};
+const claimsWithoutSource = (text) =>
+  text
+    .split(/(?<=[.!?])\s+/)
+    .map((s) => s.trim())
+    .filter((s) => (/\b\d[\d,.]*%?/.test(s) || ALLEGATION.test(s)) && !ATTRIBUTION.test(s))
+    .slice(0, 5)
+    .map((s) => (s.length > 160 ? s.slice(0, 157) + '...' : s));
+
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export default async function handler(req, res) {
@@ -59,6 +73,8 @@ export default async function handler(req, res) {
     warnings,
     suggestedFixes: fixes,
     rulesChecked: RULES_CHECKED,
+    summary: summaryOf(body),
+    claimsNeedingSources: claimsWithoutSource(body),
     model: { id: 'stub-rules-v1', provider: 'stub' },
     requestId: randomUUID(),
     latencyMs: Date.now() - started,

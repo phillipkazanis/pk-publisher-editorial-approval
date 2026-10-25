@@ -49,7 +49,7 @@ A header nav switches between four views:
 
 - **Submit** (`/`): journalists submit an article. A progress card for the latest submission shows Submitted, In review and Published, with a revision-requested flag that links to Revisions.
 - **Revisions** (`/revisions`): articles sent back for a revised version, one row each with the round, a short reason and a Revise button. Revise opens the full reason and an editor with the last saved text; Resubmit continues the same process instance.
-- **Editor tasks** (`/tasks`): lists open `Editorial approval` tasks for the `editors` group, with the article and the rules and AI check results. Approve completes the task; Reject needs a reason and sends the article back for revision. **Reassign to** hands a task to another editor. It uses `POST /v2/user-tasks/search`, `.../{key}/effective-variables/search`, `.../{key}/completion` and `.../{key}/assignment`.
+- **Editor tasks** (`/tasks`): lists open `Editorial approval` tasks for the `editors` group, with the article, the rules and AI check results, an AI summary, claims that name no source, and plain statistics about the text (read time, sentences, quotations, attribution phrases, figures, headline length, and the word count against the limits; `lib/article-stats.js`). Approve completes the task; Reject needs a reason and sends the article back for revision. **Reassign to** hands a task to another editor. It uses `POST /v2/user-tasks/search`, `.../{key}/effective-variables/search`, `.../{key}/completion` and `.../{key}/assignment`.
 - **Admin** (`/admin`): a KPI strip (first-pass rate, average revision rounds, median time to publish, publish retries, abandonment, calculated from the app's record of each submission) and recent submissions with status, publish attempts, notification count and instance key, refreshed every few seconds. It complements Operate: for step-by-step history, variables and the AI input and output, open the instance in Operate.
 
 Things to know:
@@ -105,6 +105,8 @@ Add `--writer "Priya Nair"` to start it as a simulated writer. Reassign an appro
 It needs the `CAMUNDA_*` values and `MOCK_CMS_BASE_URL` in `.env.local`, prints each HTTP step with the bearer token redacted, and never prints the token or secret. `--revision-timeout` (an ISO duration such as `PT2M`) compresses the 24-hour abandon timer for a demo. It starts a **real** process instance on whatever cluster `.env.local` points at; try it against `npm run fake:camunda` first.
 
 **Simulated writers.** The Submit page has a "Writing as" picker with four fictional writers (`lib/writers.js`, reserved `.invalid` addresses). The choice is sent as the process variable `submittedBy` (visible in Operate) and stored on the app's record. Revisions can be filtered by writer, and Editor tasks and Admin show who wrote each article. In production the portal passes the signed-in journalist. Camunda's own history records the API client as the starter, so the writer is business data, not engine identity.
+
+To check the article statistics (pure function): `npm run test:stats`.
 
 To check the metrics calculation (pure function, no database or network):
 

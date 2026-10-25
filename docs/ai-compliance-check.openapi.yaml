@@ -67,13 +67,15 @@ components:
             round: { type: integer, minimum: 1, description: Which revision round this is. }
     Verdict:
       type: object
-      required: [verdict, reasons, warnings, suggestedFixes, rulesChecked]
+      required: [verdict, reasons, warnings, suggestedFixes, rulesChecked, summary, claimsNeedingSources]
       properties:
         verdict: { type: string, enum: [PASS, FAIL] }
         reasons: { type: array, items: { type: string }, description: One sentence each, naming the style rule key. Empty when PASS. }
         warnings: { type: array, items: { type: string }, description: Advisory findings that never cause a FAIL. }
         suggestedFixes: { type: array, items: { type: string } }
         rulesChecked: { type: array, items: { type: string }, description: The rule keys actually evaluated, for audit. }
+        summary: { type: string, description: Two or three neutral sentences saying what the article reports, for the human reviewer. Not a judgement. }
+        claimsNeedingSources: { type: array, items: { type: string }, description: Factual claims stated without attribution, one short sentence each, so the reviewer knows what to check. Informational only, never causes a FAIL by itself. }
         model:
           type: object
           properties:

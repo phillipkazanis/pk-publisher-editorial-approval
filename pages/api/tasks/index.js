@@ -1,8 +1,9 @@
 import { camundaRequest, missingCamundaEnv } from '../../../lib/camunda-auth';
+import { articleStats } from '../../../lib/article-stats';
 
 const EDITOR_GROUP = 'editors';
 const APPROVAL_ELEMENT_ID = 'Task_EditorialApproval';
-const WANTED = ['submissionId', 'submittedBy', 'articleTitle', 'articleBody', 'wordCount', 'submitterEmail', 'complianceResult', 'aiComplianceResult'];
+const WANTED = ['submissionId', 'submittedBy', 'articleTitle', 'articleBody', 'wordCount', 'submitterEmail', 'revisionRound', 'complianceResult', 'aiComplianceResult'];
 
 // Variable values come back as JSON-encoded strings.
 function parseValue(raw) {
@@ -59,6 +60,11 @@ export default async function handler(req, res) {
           aiVerdict: aiJson?.verdict || (typeof ai.responseText === 'string' ? ai.responseText.split('\n')[0].trim() : null),
           aiReasons: strings(aiJson?.reasons),
           aiWarnings: strings(aiJson?.warnings),
+          aiSuggestedFixes: strings(aiJson?.suggestedFixes),
+          aiSummary: typeof aiJson?.summary === 'string' ? aiJson.summary : null,
+          claimsNeedingSources: strings(aiJson?.claimsNeedingSources),
+          revisionRound: (Number.isInteger(vars.revisionRound) ? vars.revisionRound : 0) + 1,
+          stats: articleStats(vars.articleTitle, vars.articleBody),
           aiRulesChecked: strings(aiJson?.rulesChecked),
           variablesError,
         };

@@ -182,6 +182,7 @@ async function run() {
   const ai = (article, extraHeaders) =>
     fetch(`${BASE_URL}/api/llm-ops/compliance-check`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(extraHeaders || {}) }, body: JSON.stringify({ article, context: { submissionId: 'smoke', round: 1 } }) });
   const aiClean = await (await ai({ title: '[SMOKE TEST] council vote', body: 'Council officers said the first stage will begin in March. Supporters told the meeting that safer routes would help.' })).json().catch(() => ({}));
+  check('AI service stand-in returns a summary and a list of claims needing sources', typeof aiClean.summary === 'string' && aiClean.summary.length > 0 && Array.isArray(aiClean.claimsNeedingSources), JSON.stringify(Object.keys(aiClean)));
   check('AI service stand-in passes a neutral, attributed article', aiClean.verdict === 'PASS' && Array.isArray(aiClean.rulesChecked) && aiClean.reasons?.length === 0 && aiClean.model?.provider === 'stub');
   const aiBad = await (await ai({ title: '[SMOKE TEST] mayor', body: 'The mayor is a corrupt thief who stole millions. His disgusting behaviour is a disaster.' })).json().catch(() => ({}));
   check('AI service stand-in fails unattributed allegations with rule-keyed reasons and fixes', aiBad.verdict === 'FAIL' && aiBad.reasons?.some((r) => r.startsWith('AT-1')) && aiBad.reasons?.some((r) => r.startsWith('SL-1')) && aiBad.suggestedFixes?.length === aiBad.reasons?.length);
