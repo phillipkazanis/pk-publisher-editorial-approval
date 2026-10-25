@@ -4,6 +4,7 @@ Camunda 8 demo: editorial content approval with AI compliance check, human appro
 
 - Demo brief: `demos/publisher-editorial-approval/brief.md` in phillipkazanis/pk-se-knowledge
 - Demo script: [DEMO_SCRIPT.md](DEMO_SCRIPT.md)
+- PoC brief traceability (every brief item, status, gaps): [docs/poc-checklist.md](docs/poc-checklist.md)
 - Cluster: cma-showcase-cluster (not yet deployed - deploy gate pending)
 - Schema: Supabase `demo_publisher_approval`
 
@@ -25,6 +26,7 @@ Camunda 8 demo: editorial content approval with AI compliance check, human appro
 | `scripts/smoke-test.mjs` | Local API smoke test |
 | `scripts/lint-camunda.mjs` | Lint for the files in `camunda/` |
 | `pages/api/brand/logo.js`, `scripts/upload-logo.mjs` | Serves the logo from a private Supabase Storage bucket, and the one-time upload script |
+| `scripts/camunda-api.mjs`, `docs/samples/` | Starts or resubmits an article straight through the Camunda REST API with an OAuth 2.0 client-credentials token (`npm run api`), and sample article texts for it |
 | `scripts/fake-camunda.mjs` | Tiny local stand-in for the few Camunda endpoints the Editor tasks view uses (not a real engine) |
 
 ## Views
@@ -74,6 +76,16 @@ CAMUNDA_OAUTH_URL=http://localhost:4010/oauth/token CAMUNDA_CLIENT_ID=fake CAMUN
 ```
 
 Open http://localhost:3000/tasks to see two seeded tasks. `http://localhost:4010/_state` shows which tasks were completed and with which variables. The fake only answers the calls above and rejects requests that do not match Camunda's documented shapes. It does not replace a test against the real cluster.
+
+To start or resubmit through the Camunda REST API with an OAuth 2.0 client-credentials token (no UI or app route involved):
+
+```
+npm run api -- start --title "SMOKE TEST - API start" --body-file docs/samples/clean-article.txt
+npm run api -- start --title "SMOKE TEST - timeout" --body-file docs/samples/revision-article.txt --revision-timeout PT2M
+npm run api -- resubmit <submissionId> --title "SMOKE TEST - API start" --body-file docs/samples/clean-article.txt
+```
+
+It needs the `CAMUNDA_*` values and `MOCK_CMS_BASE_URL` in `.env.local`, prints each HTTP step with the bearer token redacted, and never prints the token or secret. `--revision-timeout` (an ISO duration such as `PT2M`) compresses the 24-hour abandon timer for a demo. It starts a **real** process instance on whatever cluster `.env.local` points at; try it against `npm run fake:camunda` first.
 
 To lint the Camunda files (report only, nothing is modified; needs `xmllint`, which is built into macOS):
 
