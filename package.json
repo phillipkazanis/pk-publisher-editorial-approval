@@ -8,7 +8,8 @@
     "start": "next start",
     "smoke": "node --env-file-if-exists=.env.local scripts/smoke-test.mjs",
     "lint:camunda": "node scripts/lint-camunda.mjs",
-    "fake:camunda": "node scripts/fake-camunda.mjs"
+    "fake:camunda": "node scripts/fake-camunda.mjs",
+    "upload:logo": "node --env-file-if-exists=.env.local scripts/upload-logo.mjs"
   },
   "dependencies": {
     "next": "14.2.35",

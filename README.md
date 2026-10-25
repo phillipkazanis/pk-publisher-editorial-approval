@@ -24,6 +24,7 @@ Camunda 8 demo: editorial content approval with AI compliance check, human appro
 | `lib/` | Camunda OAuth client and Supabase REST helper |
 | `scripts/smoke-test.mjs` | Local API smoke test |
 | `scripts/lint-camunda.mjs` | Lint for the files in `camunda/` |
+| `pages/api/brand/logo.js`, `scripts/upload-logo.mjs` | Serves the logo from a private Supabase Storage bucket, and the one-time upload script |
 | `scripts/fake-camunda.mjs` | Tiny local stand-in for the few Camunda endpoints the Editor tasks view uses (not a real engine) |
 
 ## Views
@@ -47,7 +48,7 @@ Things to know:
    - `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are needed by the mock CMS, the notify route and the smoke test.
    - `CAMUNDA_*` values are only needed for `/api/start-process`, `/api/resubmit` and the Editor tasks view (`/api/tasks`). The Submit and Admin views need only Supabase.
    - `MOCK_CMS_BASE_URL` is `http://localhost:3000` locally.
-   - Optional branding (public, not secret): `NEXT_PUBLIC_BRAND_NAME` (default "Editorial Console") and `NEXT_PUBLIC_BRAND_LOGO` (default empty, which shows a text wordmark). The logo is never stored in the repo: `public/brand/` is git-ignored, so a file there works locally but is **not deployed from GitHub**. On Vercel, set `NEXT_PUBLIC_BRAND_LOGO` to an absolute https URL.
+   - Optional branding (public, not secret): `NEXT_PUBLIC_BRAND_NAME` (default "Editorial Console") and `NEXT_PUBLIC_BRAND_LOGO` (default empty, which shows a text wordmark). The logo is never stored in the repo. Recommended: run `npm run upload:logo -- path/to/logo.png` once (it puts the image in a private Supabase Storage bucket, `demo-publisher-brand`) and set `NEXT_PUBLIC_BRAND_LOGO=/api/brand/logo`. The app serves it from there, so it works locally and on Vercel with no image in git. A file in `public/brand/` is git-ignored and works locally only; an absolute https URL also works.
    - `NEXT_PUBLIC_SHOW_TEST_BUTTON=true` shows the "Load test article" buttons. Keep it off on production unless the demo is running.
 3. `npm run dev` and open http://localhost:3000. The form page loads without any secrets. `NEXT_PUBLIC_*` values are read at build and dev-server start, so restart after changing them.
 
