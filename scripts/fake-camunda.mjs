@@ -5,6 +5,8 @@
 //   POST /v2/user-tasks/search
 //   POST /v2/user-tasks/{key}/effective-variables/search
 //   POST /v2/user-tasks/{key}/completion
+//   POST /v2/process-instances                                  (used by scripts/camunda-api.mjs)
+//   POST /v2/messages/publication                               (used by scripts/camunda-api.mjs)
 //   GET  /_state                                                (test helper: what was completed and with which variables)
 //
 // Run: npm run fake:camunda, then start the app with the overrides shown in the README.
@@ -21,6 +23,8 @@ const tasks = new Map([
   ['2251799813685302', { assignee: 'editor1', creationDate: '2026-10-25T05:20:00.000Z', processInstanceKey: '2251799813685202', vars: { submissionId: 'fake-submission-2', articleTitle: '[FAKE] Storm warning issued', articleBody: 'The weather bureau has issued a severe storm warning for the region.', wordCount: 12, submitterEmail: 'journalist@example.invalid', complianceResult: { verdict: 'PASS', reason: 'Passed deterministic rules' }, aiComplianceResult: { responseText: 'VERDICT: PASS\nFactual tone.' } } }],
 ]);
 const completed = [];
+const started = [];
+const messages = [];
 
 function send(res, status, body) {
   if (status === 204) return res.writeHead(204).end();
@@ -41,7 +45,7 @@ const server = createServer(async (req, res) => {
   const raw = await readBody(req);
   console.log(`${req.method} ${url.pathname}${url.search}`);
 
-  if (req.method === 'GET' && url.pathname === '/_state') return send(res, 200, { open: [...tasks.keys()], completed });
+  if (req.method === 'GET' && url.pathname === '/_state') return send(res, 200, { open: [...tasks.keys()], completed, started, messages });
 
   if (req.method === 'POST' && url.pathname === '/oauth/token') {
     const form = new URLSearchParams(raw);
@@ -57,6 +61,20 @@ const server = createServer(async (req, res) => {
     body = raw ? JSON.parse(raw) : {};
   } catch {
     return problem(res, 400, 'invalid JSON');
+  }
+
+  if (req.method === 'POST' && url.pathname === '/v2/process-instances') {
+    const v = body.variables || {};
+    if (body.processDefinitionId !== 'publisherEditorialApproval' || !v.submissionId || !v.articleBody || !v.mockCmsBaseUrl) return problem(res, 400, 'unexpected process start request');
+    const processInstanceKey = String(2251799813690000 + started.length);
+    started.push({ processInstanceKey, variableNames: Object.keys(v), revisionTimeout: v.revisionTimeout ?? null, submissionId: v.submissionId });
+    return send(res, 200, { processInstanceKey, processDefinitionKey: '2251799813680001', processDefinitionId: body.processDefinitionId });
+  }
+
+  if (req.method === 'POST' && url.pathname === '/v2/messages/publication') {
+    if (body.name !== 'publisher-approval-resubmitted' || !body.correlationKey || !body.variables?.articleBody) return problem(res, 400, 'unexpected message publication');
+    messages.push({ name: body.name, correlationKey: body.correlationKey, timeToLive: body.timeToLive });
+    return send(res, 200, { messageKey: String(2251799813699000 + messages.length) });
   }
 
   if (req.method === 'POST' && url.pathname === '/v2/user-tasks/search') {

@@ -19,6 +19,7 @@ const SCHEMA = 'demo_publisher_approval';
 const runId = `${PREFIX}${Date.now()}`;
 const publishId = `${runId}-publish`;
 const notifyId = `${runId}-notify`;
+const apiId = `${runId}-api`; // never seeded: mimics a process started straight through the Camunda API
 
 function assertTestId(id) {
   if (typeof id !== 'string' || !id.startsWith(PREFIX)) {
@@ -66,7 +67,7 @@ async function seed(id) {
 }
 
 async function cleanup() {
-  for (const id of [publishId, notifyId]) {
+  for (const id of [publishId, notifyId, apiId]) {
     try {
       assertTestId(id);
       await sb(`notifications?submission_id=eq.${encodeURIComponent(id)}`, { method: 'DELETE' });
@@ -98,10 +99,18 @@ async function run() {
   const bad = await post('/api/mock-cms/publish', {});
   check('mock publish rejects a missing submissionId (400)', bad.status === 400, `status ${bad.status}`);
 
-  // 3b. Status route behind the status strip: returns only the status
+  // 3a. Publish for a submission that has no mirror row (process started via the Camunda API, not this app):
+  // the mock CMS must create the row, fail attempt 1 and succeed on attempt 2.
+  const apiFirst = await post('/api/mock-cms/publish', { submissionId: apiId, title: '[SMOKE TEST] api start', body: 'one two three' });
+  check('unseeded publish attempt 1 fails with HTTP 500', apiFirst.status === 500, `status ${apiFirst.status}`);
+  const apiSecond = await post('/api/mock-cms/publish', { submissionId: apiId, title: '[SMOKE TEST] api start', body: 'one two three' });
+  const apiSecondBody = await apiSecond.json().catch(() => ({}));
+  check('unseeded publish attempt 2 succeeds (row created by the mock CMS)', apiSecond.status === 200 && apiSecondBody.attempts === 2, `status ${apiSecond.status}`);
+
+  // 3b. Status route behind the status tracker: returns the status and the latest revision reason
   const stRes = await fetch(`${BASE_URL}/api/submission-status?submissionId=${encodeURIComponent(publishId)}`);
   const stBody = await stRes.json().catch(() => ({}));
-  check('submission-status returns the current status', stRes.status === 200 && stBody.status === 'published' && Object.keys(stBody).length === 1, `status ${stRes.status}`);
+  check('submission-status returns the current status', stRes.status === 200 && stBody.status === 'published' && stBody.reason === null && Object.keys(stBody).length === 2, `status ${stRes.status}`);
   const stNone = await fetch(`${BASE_URL}/api/submission-status`);
   check('submission-status rejects a missing submissionId (400)', stNone.status === 400, `status ${stNone.status}`);
   const stUnknown = await fetch(`${BASE_URL}/api/submission-status?submissionId=${encodeURIComponent(`${runId}-unknown`)}`);
@@ -128,6 +137,9 @@ async function run() {
   check('notification row written', notes.length === 1 && notes[0].recipient === 'smoke-test@example.invalid');
   const [noteRow] = await sb(`submissions?submission_id=eq.${encodeURIComponent(notifyId)}&select=status`);
   check('submission marked revision_requested', noteRow?.status === 'revision_requested');
+  const reasonRes = await fetch(`${BASE_URL}/api/submission-status?submissionId=${encodeURIComponent(notifyId)}`);
+  const reasonBody = await reasonRes.json().catch(() => ({}));
+  check('submission-status returns the revision reason for the submitter', reasonBody.status === 'revision_requested' && reasonBody.reason === '[SMOKE TEST] revision reason');
 }
 
 console.log(`Smoke test ${runId} against ${BASE_URL}`);

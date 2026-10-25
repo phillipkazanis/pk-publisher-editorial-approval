@@ -86,6 +86,9 @@ export default function Admin() {
                     <td className={styles.cellTitle}>
                       {r.title || '(no headline)'}
                       <div className={styles.mono}>{r.submissionId}</div>
+                      {r.status === 'revision_requested' && r.lastNotification && (
+                        <div className={styles.taskMeta}>Revision reason: {r.lastNotification}</div>
+                      )}
                     </td>
                     <td data-label="Status">
                       <span className={`${styles.badge} ${styles[`badge_${r.status}`] || ''}`}>{STATUS_LABELS[r.status] || r.status}</span>

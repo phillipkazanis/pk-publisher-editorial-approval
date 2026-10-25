@@ -9,6 +9,7 @@
     "smoke": "node --env-file-if-exists=.env.local scripts/smoke-test.mjs",
     "lint:camunda": "node scripts/lint-camunda.mjs",
     "fake:camunda": "node scripts/fake-camunda.mjs",
+    "api": "node --env-file-if-exists=.env.local scripts/camunda-api.mjs",
     "upload:logo": "node --env-file-if-exists=.env.local scripts/upload-logo.mjs"
   },
   "dependencies": {

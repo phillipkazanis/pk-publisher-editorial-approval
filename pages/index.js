@@ -31,6 +31,7 @@ export default function Home() {
   const [status, setStatus] = useState('');
   const [trackedId, setTrackedId] = useState('');
   const [latestStatus, setLatestStatus] = useState('');
+  const [latestReason, setLatestReason] = useState('');
 
   // Follow the status of the last submission made from this page until it is published.
   useEffect(() => {
@@ -44,6 +45,7 @@ export default function Home() {
         const j = await r.json();
         if (cancelled) return;
         setLatestStatus(j.status);
+        setLatestReason(j.reason || '');
         if (j.status === 'published') clearInterval(timer);
       } catch {
         // Ignore transient errors; the next poll retries.
@@ -129,7 +131,7 @@ export default function Home() {
           </ol>
           {latestStatus === 'revision_requested' && (
             <p className={`${styles.statusNote} ${styles.statusNoteWarn}`}>
-              A revision was requested. Edit the article below and resubmit it using the submission ID.
+              A revision was requested{latestReason ? `: ${latestReason.replace(/[.\s]+$/, '')}.` : '.'} Edit the article below and resubmit it using the submission ID.
             </p>
           )}
           {latestStatus === 'published' && <p className={styles.statusNote}>Published to the mock CMS.</p>}
