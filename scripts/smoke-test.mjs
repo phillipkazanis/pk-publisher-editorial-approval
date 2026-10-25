@@ -120,7 +120,7 @@ async function run() {
 
   // 3c. Editor tasks and Admin pages load; the admin API lists the test submission.
   // /api/tasks is not checked here: it needs a Camunda cluster (or `npm run fake:camunda`).
-  for (const [path, heading] of [['/tasks', 'Editor tasks'], ['/admin', 'Admin']]) {
+  for (const [path, heading] of [['/revisions', 'Revisions needed'], ['/tasks', 'Editor tasks'], ['/admin', 'Admin']]) {
     const pageRes = await fetch(`${BASE_URL}${path}`);
     const pageHtml = await pageRes.text();
     check(`GET ${path} loads`, pageRes.status === 200 && pageHtml.includes(heading), `status ${pageRes.status}`);

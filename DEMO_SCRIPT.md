@@ -34,8 +34,8 @@ The brief wants a revision triggered by an AI check failure **or** a human rejec
 
 **S2: rules failure.**
 1. Submit "Load revision test article" (contains the banned term "guaranteed"). Note the **process instance key**.
-2. The submitter sees "Revision requested" **with the reason** on the Submit view, and the Admin view lists it. In Operate the instance waits at the event-based gateway.
-3. Resubmit revised content: on the Submit view, open the article under "Revisions needed" ("Revise this article" loads the last text and the id), edit it, and click "Resubmit revised article". Or use the API: `npm run api -- resubmit <submissionId> --title "..." --body-file docs/samples/clean-article.txt` (a simple API call with revised content). A second resubmit for the same round is refused.
+2. The submitter sees "Revision requested" **with the reason** on the Submit view, and the article appears in the **Revisions** view (and in Admin). In Operate the instance waits at the event-based gateway.
+3. Resubmit revised content: open the **Revisions** view, click **Revise** on the article (it shows why it was sent back and loads the last text), edit it, and click "Resubmit revised article". Or use the API: `npm run api -- resubmit <submissionId> --title "..." --body-file docs/samples/clean-article.txt` (a simple API call with revised content). A second resubmit for the same round is refused.
 4. In Operate: the **same instance key** loops back to the banned-word lookup and continues to approval. One instance, one audit trail.
 
 **S2b: AI check fails while the rules pass** (the brief's "AI check fail" trigger).

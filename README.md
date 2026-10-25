@@ -14,13 +14,14 @@ Camunda 8 demo: editorial content approval with AI compliance check, human appro
 |------|------------|
 | `camunda/` | **Web Modeler Git Sync folder.** The current BPMN, DMN and form live here. Edit them in Web Modeler, not by hand. |
 | `components/Layout.js`, `pages/_app.js`, `styles/` | Shared header (logo or wordmark) and view nav, plus the stylesheet |
-| `pages/index.js` | **Submit** view: submission and resubmission form with a status tracker |
+| `pages/index.js` | **Submit** view: just the submission form, with a progress card for the latest submission |
+| `pages/revisions.js` | **Revisions** view: a list of articles waiting for a revision; Revise opens an editor and Resubmit continues the same instance |
 | `pages/tasks.js`, `pages/api/tasks/` | **Editor tasks** view: open approval tasks with Approve and Reject (calls the Camunda REST API) |
 | `pages/admin.js`, `pages/api/admin/submissions.js` | **Admin** view: read-only table of submissions from Supabase |
 | `pages/api/submission-status.js` | Read-only: returns a submission's status for the status tracker |
 | `pages/api/start-process.js` | Starts a process instance (calls the Camunda cluster) |
 | `pages/api/resubmit.js` | Resubmits into the same instance: only while the submission is waiting for a revision, once per round, by publishing the `publisher-approval-resubmitted` message (calls the Camunda cluster) |
-| `pages/api/revisions.js` | Read-only: submissions waiting for a revision, with the reason and last text, for the "Revisions needed" panel |
+| `pages/api/revisions.js` | Read-only: submissions waiting for a revision, with the reason and last text, for the Revisions view |
 | `pages/api/mark-abandoned.js` | Called by the process when the revision timer fires, so the app stops accepting resubmissions |
 | `pages/api/mock-cms/publish.js` | Mock CMS: fails the first publish attempt per submission, succeeds on the second |
 | `pages/api/notify-submitter.js` | Revision notification stub (writes to Supabase) |
@@ -40,9 +41,10 @@ This is the only element that breaks the "flat process" convention, on purpose, 
 
 ## Views
 
-A header nav switches between three views:
+A header nav switches between four views:
 
-- **Submit** (`/`): journalists submit and resubmit articles. A tracker shows Submitted, In review and Published, with a revision-requested flag.
+- **Submit** (`/`): journalists submit an article. A progress card for the latest submission shows Submitted, In review and Published, with a revision-requested flag that links to Revisions.
+- **Revisions** (`/revisions`): articles sent back for a revised version, one row each with the round, a short reason and a Revise button. Revise opens the full reason and an editor with the last saved text; Resubmit continues the same process instance.
 - **Editor tasks** (`/tasks`): lists open `Editorial approval` tasks for the `editors` group, with the article and the rules and AI check results. Approve completes the task; Reject needs a reason and sends the article back for revision. It uses `POST /v2/user-tasks/search`, `.../{key}/effective-variables/search` and `.../{key}/completion`.
 - **Admin** (`/admin`): recent submissions with status, publish attempts, notification count and instance key, refreshed every few seconds. It complements Operate: for step-by-step history, variables and the AI input and output, open the instance in Operate.
 

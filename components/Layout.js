@@ -10,6 +10,7 @@ const BRAND_LOGO = process.env.NEXT_PUBLIC_BRAND_LOGO || '';
 
 const NAV = [
   { href: '/', label: 'Submit' },
+  { href: '/revisions', label: 'Revisions' },
   { href: '/tasks', label: 'Editor tasks' },
   { href: '/admin', label: 'Admin' },
 ];

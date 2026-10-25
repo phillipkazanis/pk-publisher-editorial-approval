@@ -484,31 +484,34 @@
   white-space: nowrap;
 }
 
-/* Revisions needed */
-.revisionList {
-  margin: 0;
-  padding: 0;
-  list-style: none;
+/* Submit and Revisions: one narrow column */
+.narrow {
+  max-width: 760px;
 }
-.revisionItem {
-  padding: 12px 0;
-  border-top: 1px solid var(--border);
+.itemHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
 }
-.revisionItem:first-child {
-  border-top: 0;
-  padding-top: 0;
+.itemMain {
+  min-width: 0;
 }
-.revisionReason {
-  margin: 6px 0 10px;
-  font-size: 14px;
+.itemHead .btnPrimary {
+  flex: none;
 }
-.revisionReason summary {
-  cursor: pointer;
-  color: var(--accent-dark);
-  font-weight: 600;
-}
-.revisionReason p {
+.reasonPreview {
   margin: 6px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.reasonBox {
+  margin: 0 0 16px;
+  padding: 12px;
+  border-radius: 6px;
+  background: #fdf3e1;
+  font-size: 14px;
   overflow-wrap: anywhere;
 }
 
@@ -550,6 +553,10 @@
   }
 }
 @media (max-width: 520px) {
+  .itemHead {
+    flex-direction: column;
+    gap: 10px;
+  }
   .appName {
     display: none;
   }
