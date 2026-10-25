@@ -9,6 +9,7 @@ const STATUS_LABELS = {
   revision_requested: 'Revision requested',
   resubmitted: 'Resubmitted',
   published: 'Published',
+  abandoned: 'Abandoned',
 };
 
 function when(iso) {

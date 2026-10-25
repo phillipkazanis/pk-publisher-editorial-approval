@@ -27,6 +27,7 @@ export default async function handler(req, res) {
         submission_id: submissionId,
         process_instance_key: String(instance.processInstanceKey),
         article_title: articleTitle || null,
+        article_body: articleBody,
         word_count: wordCount,
         status: 'submitted',
       }),

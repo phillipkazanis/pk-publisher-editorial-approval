@@ -19,6 +19,8 @@ const SCHEMA = 'demo_publisher_approval';
 const runId = `${PREFIX}${Date.now()}`;
 const publishId = `${runId}-publish`;
 const notifyId = `${runId}-notify`;
+const revId = `${runId}-rev`; // waiting for a revision
+const pubId = `${runId}-pub`; // already published
 const apiId = `${runId}-api`; // never seeded: mimics a process started straight through the Camunda API
 
 function assertTestId(id) {
@@ -59,15 +61,15 @@ function check(name, ok, detail = '') {
   if (!ok) failures++;
 }
 
-async function seed(id) {
+async function seed(id, extra = {}) {
   await sb('submissions', {
     method: 'POST',
-    body: JSON.stringify({ submission_id: assertTestId(id), article_title: '[SMOKE TEST] do not use', word_count: 0, status: 'smoke_test' }),
+    body: JSON.stringify({ submission_id: assertTestId(id), article_title: '[SMOKE TEST] do not use', word_count: 0, status: 'smoke_test', ...extra }),
   });
 }
 
 async function cleanup() {
-  for (const id of [publishId, notifyId, apiId]) {
+  for (const id of [publishId, notifyId, apiId, revId, pubId]) {
     try {
       assertTestId(id);
       await sb(`notifications?submission_id=eq.${encodeURIComponent(id)}`, { method: 'DELETE' });
@@ -127,6 +129,31 @@ async function run() {
   const adminBody = await adminRes.json().catch(() => ({}));
   const mine = (adminBody.submissions || []).find((s) => s.submissionId === publishId);
   check('admin API lists the test submission (published, 2 attempts)', adminRes.status === 200 && mine?.status === 'published' && mine?.publishAttempts === 2, `status ${adminRes.status}`);
+
+  // 3d. Resubmission management (needs no Camunda): the revisions list, and the resubmit and abandon rules.
+  await seed(revId, { status: 'revision_requested', article_body: 'revised text goes here', last_notification: '[SMOKE TEST] fix the headline' });
+  await seed(pubId, { status: 'published' });
+  const revRes = await fetch(`${BASE_URL}/api/revisions`);
+  const revBody = await revRes.json().catch(() => ({}));
+  const rev = (revBody.revisions || []).find((r) => r.submissionId === revId);
+  check('revisions API lists a submission waiting for a revision, with reason and text', revRes.status === 200 && rev?.reason === '[SMOKE TEST] fix the headline' && rev?.body === 'revised text goes here', `status ${revRes.status}`);
+  check('revisions API does not list a published submission', !(revBody.revisions || []).some((r) => r.submissionId === pubId));
+  const resubUnknown = await post('/api/resubmit', { submissionId: `${runId}-nope`, articleBody: 'one two three' });
+  check('resubmit refuses an unknown submission (404)', resubUnknown.status === 404, `status ${resubUnknown.status}`);
+  const resubPub = await post('/api/resubmit', { submissionId: pubId, articleBody: 'one two three' });
+  check('resubmit refuses a published submission (409)', resubPub.status === 409, `status ${resubPub.status}`);
+  const abandonPub = await (await post('/api/mark-abandoned', { submissionId: pubId })).json().catch(() => ({}));
+  check('mark-abandoned never overrides a published submission', abandonPub.abandoned === false);
+  const abandon1 = await post('/api/mark-abandoned', { submissionId: revId });
+  const abandon1Body = await abandon1.json().catch(() => ({}));
+  check('mark-abandoned marks a submission that was waiting for a revision', abandon1.status === 200 && abandon1Body.abandoned === true, `status ${abandon1.status}`);
+  const abandon2Body = await (await post('/api/mark-abandoned', { submissionId: revId })).json().catch(() => ({}));
+  check('mark-abandoned is safe to repeat', abandon2Body.abandoned === false);
+  const resubAbandoned = await post('/api/resubmit', { submissionId: revId, articleBody: 'one two three' });
+  const resubAbandonedBody = await resubAbandoned.json().catch(() => ({}));
+  check('resubmit refuses an abandoned submission (409) instead of losing the message', resubAbandoned.status === 409 && resubAbandonedBody.status === 'abandoned', `status ${resubAbandoned.status}`);
+  const abandonedStatus = await (await fetch(`${BASE_URL}/api/submission-status?submissionId=${encodeURIComponent(revId)}`)).json().catch(() => ({}));
+  check('status route reports abandoned', abandonedStatus.status === 'abandoned');
 
   // 4. Notify route records the notification and flags the submission
   await seed(notifyId);

@@ -14,7 +14,7 @@ export default async function handler(req, res) {
       // Without one the attempt counter would never pass 1 and the publish would fail forever.
       await sb('submissions', {
         method: 'POST',
-        body: JSON.stringify({ submission_id: submissionId, article_title: title || null, word_count: wordCountOf(body), status: 'submitted' }),
+        body: JSON.stringify({ submission_id: submissionId, article_title: title || null, article_body: body || null, word_count: wordCountOf(body), status: 'submitted' }),
       });
       rows = [{ publish_attempts: 0 }];
     }

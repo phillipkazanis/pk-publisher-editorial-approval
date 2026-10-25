@@ -11,17 +11,19 @@ const STATUS_LABELS = {
   revision_requested: 'Revision requested',
   resubmitted: 'Resubmitted',
   published: 'Published',
+  abandoned: 'Abandoned',
 };
 
 // The status column only tells us: in review (submitted or resubmitted), revision requested, or published.
 const STEPS = ['Submitted', 'In review', 'Published'];
 function stepStates(s) {
   if (s === 'published') return ['done', 'done', 'done'];
-  if (s === 'revision_requested') return ['done', 'attention', 'pending'];
+  if (s === 'revision_requested' || s === 'abandoned') return ['done', 'attention', 'pending'];
   return ['done', 'current', 'pending'];
 }
 
 const POLL_MS = 4000;
+const REVISIONS_POLL_MS = 6000;
 
 export default function Home() {
   const [title, setTitle] = useState('');
@@ -32,6 +34,7 @@ export default function Home() {
   const [trackedId, setTrackedId] = useState('');
   const [latestStatus, setLatestStatus] = useState('');
   const [latestReason, setLatestReason] = useState('');
+  const [revisions, setRevisions] = useState([]);
 
   // Follow the status of the last submission made from this page until it is published.
   useEffect(() => {
@@ -58,6 +61,27 @@ export default function Home() {
       clearInterval(timer);
     };
   }, [trackedId]);
+
+  // Submissions waiting for a revised version (any submitter, shared demo): reopen one to resubmit into the same instance.
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const r = await fetch('/api/revisions');
+        if (!r.ok || cancelled) return;
+        const j = await r.json();
+        if (!cancelled) setRevisions(j.revisions || []);
+      } catch {
+        // Ignore transient errors; the next poll retries.
+      }
+    }
+    load();
+    const timer = setInterval(load, REVISIONS_POLL_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, []);
 
   async function submit(e) {
     e.preventDefault();
@@ -89,6 +113,16 @@ export default function Home() {
       setLatestStatus('resubmitted');
     }
     setStatus(r.ok ? 'Resubmitted to the same process instance.' : 'Error: ' + j.error);
+  }
+
+  // Reopen a submission that needs a revision: load its last text and id, then the submitter edits and resubmits.
+  function revise(item) {
+    setSubmissionId(item.submissionId);
+    setTitle(item.title || '');
+    setBody(item.body || '');
+    setTrackedId(item.submissionId);
+    setStatus(item.body ? 'Loaded for revision. Edit the article, then click "Resubmit revised article".' : 'Loaded for revision. Paste the revised article, then click "Resubmit revised article".');
+    document.getElementById('headline')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
   // Fill the form only; the user still clicks Submit.
@@ -134,6 +168,11 @@ export default function Home() {
               A revision was requested{latestReason ? `: ${latestReason.replace(/[.\s]+$/, '')}.` : '.'} Edit the article below and resubmit it using the submission ID.
             </p>
           )}
+          {latestStatus === 'abandoned' && (
+            <p className={`${styles.statusNote} ${styles.statusNoteWarn}`}>
+              This submission was abandoned because no revision arrived in time. Start a new submission.
+            </p>
+          )}
           {latestStatus === 'published' && <p className={styles.statusNote}>Published to the mock CMS.</p>}
           {trackedId && (
             <p className={styles.statusNote}>
@@ -145,6 +184,29 @@ export default function Home() {
 
       <div className={styles.grid}>
         <div>
+          {revisions.length > 0 && (
+            <section className={styles.card} aria-label="Revisions needed">
+              <h2 className={styles.cardTitle}>Revisions needed</h2>
+              <p className={styles.cardHint}>These articles are waiting for a revised version. Revising continues the same process instance.</p>
+              <ul className={styles.revisionList}>
+                {revisions.map((r) => (
+                  <li key={r.submissionId} className={styles.revisionItem}>
+                    <strong>{r.title || '(no headline)'}</strong> <span className={styles.taskMeta}>Revision {r.round}</span>
+                    {r.reason && (
+                      <details className={styles.revisionReason}>
+                        <summary>Why it was sent back</summary>
+                        <p>{r.reason}</p>
+                      </details>
+                    )}
+                    <button className={styles.btnSecondary} type="button" onClick={() => revise(r)}>
+                      Revise this article
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
           {SHOW_TEST_BUTTONS && (
             <div className={styles.demoTools}>
               <span className={styles.demoToolsLabel}>Demo tools</span>
@@ -176,7 +238,7 @@ export default function Home() {
 
           <section className={styles.card}>
             <h2 className={styles.cardTitle}>Resubmit a revision</h2>
-            <p className={styles.cardHint}>Uses the headline and body above and continues the same process instance.</p>
+            <p className={styles.cardHint}>Uses the headline and body above and continues the same process instance. Pick an article under &quot;Revisions needed&quot; to fill this in.</p>
             <form onSubmit={resubmit}>
               <label className={styles.label} htmlFor="submissionId">Submission ID</label>
               <input id="submissionId" className={styles.input} value={submissionId} onChange={(e) => setSubmissionId(e.target.value)} />
@@ -194,7 +256,7 @@ export default function Home() {
             <li>Automated rules and an AI tone check run first.</li>
             <li>If a check fails, a revision request is sent and the process waits for your resubmission.</li>
             <li>If the checks pass, an editor approves or rejects the article in Tasklist.</li>
-            <li>A rejection also requests a revision. Resubmit with the same submission ID to continue the same process instance.</li>
+            <li>A rejection also requests a revision. Open it under "Revisions needed", edit it and resubmit: it continues the same process instance. If no revision arrives in time, the submission is abandoned.</li>
             <li>An approved article publishes to a mock CMS. The first attempt fails on purpose and retries automatically.</li>
           </ol>
           <dl className={styles.where}>

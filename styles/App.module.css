@@ -149,6 +149,10 @@
   background: #fdecd0;
   color: var(--warn);
 }
+.badge_abandoned {
+  background: #e6e8ec;
+  color: #4b5563;
+}
 .badge_published {
   background: #dcf3e6;
   color: var(--ok);
@@ -478,6 +482,34 @@
   letter-spacing: 0.04em;
   color: var(--muted);
   white-space: nowrap;
+}
+
+/* Revisions needed */
+.revisionList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.revisionItem {
+  padding: 12px 0;
+  border-top: 1px solid var(--border);
+}
+.revisionItem:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.revisionReason {
+  margin: 6px 0 10px;
+  font-size: 14px;
+}
+.revisionReason summary {
+  cursor: pointer;
+  color: var(--accent-dark);
+  font-weight: 600;
+}
+.revisionReason p {
+  margin: 6px 0 0;
+  overflow-wrap: anywhere;
 }
 
 /* Tablet and phone */

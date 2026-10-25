@@ -73,7 +73,11 @@ const server = createServer(async (req, res) => {
 
   if (req.method === 'POST' && url.pathname === '/v2/messages/publication') {
     if (body.name !== 'publisher-approval-resubmitted' || !body.correlationKey || !body.variables?.articleBody) return problem(res, 400, 'unexpected message publication');
-    messages.push({ name: body.name, correlationKey: body.correlationKey, timeToLive: body.timeToLive });
+    // The real API takes timeToLive as an integer number of milliseconds, not an ISO duration.
+    if (body.timeToLive !== undefined && !Number.isInteger(body.timeToLive)) return problem(res, 400, 'timeToLive must be an integer (milliseconds)');
+    // A repeated messageId is rejected while the message is buffered.
+    if (body.messageId && messages.some((m) => m.messageId === body.messageId)) return problem(res, 409, 'a message with this messageId was already published');
+    messages.push({ name: body.name, correlationKey: body.correlationKey, messageId: body.messageId ?? null, timeToLive: body.timeToLive });
     return send(res, 200, { messageKey: String(2251799813699000 + messages.length) });
   }
 

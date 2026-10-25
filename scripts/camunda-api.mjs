@@ -70,7 +70,7 @@ const camunda = (path, body) =>
   });
 
 const hasSupabase = Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
-const sb = (path, method, body) =>
+const sb = (path, method, body, prefer = 'return=minimal') =>
   fetch(`${process.env.SUPABASE_URL}/rest/v1/${path}`, {
     method,
     headers: {
@@ -79,9 +79,9 @@ const sb = (path, method, body) =>
       'Content-Type': 'application/json',
       'Accept-Profile': 'demo_publisher_approval',
       'Content-Profile': 'demo_publisher_approval',
-      Prefer: 'return=minimal',
+      Prefer: prefer,
     },
-    body: JSON.stringify(body),
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
   });
 
 if (command === 'start') {
@@ -106,6 +106,7 @@ if (command === 'start') {
       submission_id: submissionId,
       process_instance_key: String(instance.processInstanceKey),
       article_title: articleTitle,
+      article_body: articleBody,
       word_count: wordCount,
       status: 'submitted',
     });
@@ -115,23 +116,32 @@ if (command === 'start') {
   }
   console.log(`Started. processInstanceKey=${instance.processInstanceKey} submissionId=${submissionId}${timeout ? ` revisionTimeout=${timeout}` : ''}`);
 } else {
-  const res = await camunda('/v2/messages/publication', {
-    name: MESSAGE_NAME,
-    correlationKey: submissionId,
-    variables: { submissionId, articleTitle, articleBody, wordCount },
-    timeToLive: 'PT1H',
-  });
-  console.log(`2. POST /v2/messages/publication name=${MESSAGE_NAME} (Authorization: Bearer <redacted>) -> HTTP ${res.status}`);
-  if (!res.ok) {
-    console.error('Camunda rejected the message.');
-    process.exit(1);
+    // Same rule as the app: only a submission that is waiting for a revision can be resubmitted, once per revision round.
+    let round = 0;
+    if (hasSupabase) {
+      const id = encodeURIComponent(submissionId);
+      const claim = await sb(`submissions?submission_id=eq.${id}&status=eq.revision_requested`, 'PATCH', { status: 'resubmitted', word_count: wordCount, article_title: articleTitle, article_body: articleBody, updated_at: new Date().toISOString() }, 'return=representation');
+      const claimed = claim.ok ? await claim.json() : [];
+      console.log(`2. Supabase claim (status must be revision_requested) -> ${claimed.length ? 'claimed' : 'refused: not waiting for a revision'}`);
+      if (!claimed.length) process.exit(1);
+      const notes = await sb(`notifications?submission_id=eq.${id}&select=id`, 'GET', undefined, 'return=representation');
+      round = notes.ok ? (await notes.json()).length : 0;
+    }
+    const res = await camunda('/v2/messages/publication', {
+      name: MESSAGE_NAME,
+      correlationKey: submissionId,
+      ...(hasSupabase ? { messageId: `${submissionId}:r${round}` } : {}),
+      variables: { submissionId, articleTitle, articleBody, wordCount },
+      timeToLive: 5 * 60 * 1000, // milliseconds: the API takes an integer
+    });
+    console.log(`3. POST /v2/messages/publication name=${MESSAGE_NAME} (Authorization: Bearer <redacted>) -> HTTP ${res.status}`);
+    if (!res.ok) {
+      if (hasSupabase && res.status !== 409) await sb(`submissions?submission_id=eq.${encodeURIComponent(submissionId)}&status=eq.resubmitted`, 'PATCH', { status: 'revision_requested' });
+      console.error(res.status === 409 ? 'Camunda says this revision round was already resubmitted.' : 'Camunda rejected the message.');
+      process.exit(1);
+    }
+    console.log(`Resubmitted into the waiting instance. submissionId=${submissionId}`);
   }
-  if (hasSupabase) {
-    const m = await sb(`submissions?submission_id=eq.${encodeURIComponent(submissionId)}`, 'PATCH', { status: 'resubmitted', word_count: wordCount, article_title: articleTitle, updated_at: new Date().toISOString() });
-    console.log(`3. Supabase mirror row -> HTTP ${m.status}`);
-  }
-  console.log(`Resubmitted into the waiting instance. submissionId=${submissionId}`);
-}
 }
 
 main().catch((e) => {
