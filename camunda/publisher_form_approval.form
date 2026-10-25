@@ -1,4 +1,12 @@
 {
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.10.0",
+  "exporter": {
+    "name": "Camunda Web Modeler",
+    "version": "f127538"
+  },
+  "schemaVersion": 16,
+  "id": "publisher_form_approval",
   "components": [
     {
       "label": "Headline",
@@ -101,13 +109,5 @@
       "key": "revisionReason"
     }
   ],
-  "type": "default",
-  "id": "publisher_form_approval",
-  "executionPlatform": "Camunda Cloud",
-  "executionPlatformVersion": "8.10.0",
-  "exporter": {
-    "name": "Claude (hand-authored)",
-    "version": "1.0"
-  },
-  "schemaVersion": 16
+  "type": "default"
 }
