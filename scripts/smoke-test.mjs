@@ -107,6 +107,18 @@ async function run() {
   const stUnknown = await fetch(`${BASE_URL}/api/submission-status?submissionId=${encodeURIComponent(`${runId}-unknown`)}`);
   check('submission-status returns 404 for an unknown submission', stUnknown.status === 404, `status ${stUnknown.status}`);
 
+  // 3c. Editor tasks and Admin pages load; the admin API lists the test submission.
+  // /api/tasks is not checked here: it needs a Camunda cluster (or `npm run fake:camunda`).
+  for (const [path, heading] of [['/tasks', 'Editor tasks'], ['/admin', 'Admin']]) {
+    const pageRes = await fetch(`${BASE_URL}${path}`);
+    const pageHtml = await pageRes.text();
+    check(`GET ${path} loads`, pageRes.status === 200 && pageHtml.includes(heading), `status ${pageRes.status}`);
+  }
+  const adminRes = await fetch(`${BASE_URL}/api/admin/submissions`);
+  const adminBody = await adminRes.json().catch(() => ({}));
+  const mine = (adminBody.submissions || []).find((s) => s.submissionId === publishId);
+  check('admin API lists the test submission (published, 2 attempts)', adminRes.status === 200 && mine?.status === 'published' && mine?.publishAttempts === 2, `status ${adminRes.status}`);
+
   // 4. Notify route records the notification and flags the submission
   await seed(notifyId);
   const notify = await post('/api/notify-submitter', { submissionId: notifyId, submitterEmail: 'smoke-test@example.invalid', reason: '[SMOKE TEST] revision reason' });

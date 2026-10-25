@@ -12,7 +12,10 @@ Camunda 8 demo: editorial content approval with AI compliance check, human appro
 | Path | What it is |
 |------|------------|
 | `camunda/` | **Web Modeler Git Sync folder.** The current BPMN, DMN and form live here. Edit them in Web Modeler, not by hand. |
-| `pages/index.js`, `pages/_app.js`, `styles/` | Submission and resubmission form: a plain internal staff console with a status tracker (CSS module in `styles/`) |
+| `components/Layout.js`, `pages/_app.js`, `styles/` | Shared header (logo or wordmark) and view nav, plus the stylesheet |
+| `pages/index.js` | **Submit** view: submission and resubmission form with a status tracker |
+| `pages/tasks.js`, `pages/api/tasks/` | **Editor tasks** view: open approval tasks with Approve and Reject (calls the Camunda REST API) |
+| `pages/admin.js`, `pages/api/admin/submissions.js` | **Admin** view: read-only table of submissions from Supabase |
 | `pages/api/submission-status.js` | Read-only: returns a submission's status for the status tracker |
 | `pages/api/start-process.js` | Starts a process instance (calls the Camunda cluster) |
 | `pages/api/resubmit.js` | Publishes the `publisher-approval-resubmitted` message (calls the Camunda cluster) |
@@ -21,13 +24,28 @@ Camunda 8 demo: editorial content approval with AI compliance check, human appro
 | `lib/` | Camunda OAuth client and Supabase REST helper |
 | `scripts/smoke-test.mjs` | Local API smoke test |
 | `scripts/lint-camunda.mjs` | Lint for the files in `camunda/` |
+| `scripts/fake-camunda.mjs` | Tiny local stand-in for the few Camunda endpoints the Editor tasks view uses (not a real engine) |
+
+## Views
+
+A header nav switches between three views:
+
+- **Submit** (`/`): journalists submit and resubmit articles. A tracker shows Submitted, In review and Published, with a revision-requested flag.
+- **Editor tasks** (`/tasks`): lists open `Editorial approval` tasks for the `editors` group, with the article and the rules and AI check results. Approve completes the task; Reject needs a reason and sends the article back for revision. It uses `POST /v2/user-tasks/search`, `.../{key}/effective-variables/search` and `.../{key}/completion`.
+- **Admin** (`/admin`): recent submissions with status, publish attempts, notification count and instance key, refreshed every few seconds. It complements Operate: for step-by-step history, variables and the AI input and output, open the instance in Operate.
+
+Things to know:
+
+- **Native Tasklist is still the main approval UI.** Tasks completed from the Editor tasks view go through the API client, so Camunda's history may show the client, not the editor, as the actor. Use Tasklist when the real user must appear in the audit trail. Reassigning a task to another editor is also done in Tasklist.
+- **The API client needs authorizations** to read and complete user tasks and read process instance variables, or the view shows a notice (403). See the Camunda authorization docs.
+- **There is no login.** The Editor tasks and Admin pages and their API routes are open to anyone who can reach the app. Keep the deployment behind Vercel SSO and do not expose it publicly.
 
 ## Local setup
 
 1. `npm install`
 2. Copy `.env.example` to `.env.local` (git-ignored) and fill in the values yourself. Never commit `.env.local` or paste secret values into chat, issues or commits.
    - `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are needed by the mock CMS, the notify route and the smoke test.
-   - `CAMUNDA_*` values are only needed for `/api/start-process` and `/api/resubmit`, which are not used until the deploy gate is cleared.
+   - `CAMUNDA_*` values are only needed for `/api/start-process`, `/api/resubmit` and the Editor tasks view (`/api/tasks`). The Submit and Admin views need only Supabase.
    - `MOCK_CMS_BASE_URL` is `http://localhost:3000` locally.
    - Optional branding (public, not secret): `NEXT_PUBLIC_BRAND_NAME` (default "Editorial Console") and `NEXT_PUBLIC_BRAND_LOGO` (default empty, which shows a text wordmark). The logo is never stored in the repo: `public/brand/` is git-ignored, so a file there works locally but is **not deployed from GitHub**. On Vercel, set `NEXT_PUBLIC_BRAND_LOGO` to an absolute https URL.
    - `NEXT_PUBLIC_SHOW_TEST_BUTTON=true` shows the "Load test article" buttons. Keep it off on production unless the demo is running.
@@ -41,11 +59,20 @@ With `npm run dev` running in one terminal:
 npm run smoke
 ```
 
-This checks that the form page loads, that the mock publish route fails on the first attempt and succeeds on the second, that a missing `submissionId` is rejected, and that the notify route writes a notification and flags the submission. Safety rules:
+This checks that the Submit, Editor tasks and Admin pages load, that the mock publish route fails on the first attempt and succeeds on the second, that a missing `submissionId` is rejected, that the status and admin APIs return the test submission, and that the notify route writes a notification and flags the submission. Safety rules:
 
 - It only writes rows whose `submission_id` starts with `smoke-test-` (titles are marked `[SMOKE TEST]`) and deletes them at the end, even if a check fails. It refuses to touch any other ID.
 - It reads values from the environment (via `.env.local`) and reports missing variable names without printing values.
-- It does not call `/api/start-process` or `/api/resubmit`, because those hit the Camunda cluster.
+- It does not call `/api/start-process`, `/api/resubmit` or `/api/tasks`, because those hit the Camunda cluster.
+
+To try the Editor tasks view without a cluster, run the fake Camunda in one terminal and the app in another, passing the overrides on the command line so your `.env.local` is untouched:
+
+```
+npm run fake:camunda
+CAMUNDA_OAUTH_URL=http://localhost:4010/oauth/token CAMUNDA_CLIENT_ID=fake CAMUNDA_CLIENT_SECRET=fake CAMUNDA_ZEEBE_REST_URL=http://localhost:4010 npm run dev
+```
+
+Open http://localhost:3000/tasks to see two seeded tasks. `http://localhost:4010/_state` shows which tasks were completed and with which variables. The fake only answers the calls above and rejects requests that do not match Camunda's documented shapes. It does not replace a test against the real cluster.
 
 To lint the Camunda files (report only, nothing is modified; needs `xmllint`, which is built into macOS):
 
