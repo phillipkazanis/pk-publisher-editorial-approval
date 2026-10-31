@@ -5,7 +5,7 @@ Camunda 8 demo: editorial content approval with AI compliance check, human appro
 - Demo brief: `demos/publisher-editorial-approval/brief.md` in phillipkazanis/pk-se-knowledge
 - Demo script: [DEMO_SCRIPT.md](DEMO_SCRIPT.md)
 - PoC brief traceability (every brief item, status, gaps): [docs/poc-checklist.md](docs/poc-checklist.md)
-- Cluster: cma-showcase-cluster (not yet deployed - deploy gate pending)
+- Cluster: cma-demo-cluster (ID `11d7b228-34ce-435a-8780-37c035308e42`, region syd-1, Camunda 8.10, authorizations disabled). Deploy gate pending: nothing has been run on this cluster yet. The earlier cluster, cma-showcase-cluster, and its API client are deleted.
 - Schema: Supabase `demo_publisher_approval`
 
 ## Folder layout
@@ -55,7 +55,7 @@ A header nav switches between four views:
 Things to know:
 
 - **Native Tasklist is still the main approval UI.** Tasks completed from the Editor tasks view go through the API client, so Camunda's history may show the client, not the editor, as the actor. Use Tasklist when the real user must appear in the audit trail. Reassigning a task to another editor is also done in Tasklist.
-- **The API client needs authorizations** to read and complete user tasks and read process instance variables, or the view shows a notice (403). See the Camunda authorization docs.
+- **Authorizations are disabled** on cma-demo-cluster, so the API client needs no authorization setup to read and complete user tasks or read process instance variables. If you point the app at a cluster with authorizations enabled, the Editor tasks view shows a notice (403) until the client is authorized.
 - **There is no login.** The Editor tasks and Admin pages and their API routes are open to anyone who can reach the app. Keep the deployment behind Vercel SSO and do not expose it publicly.
 
 ## Local setup
@@ -124,4 +124,4 @@ It checks XML and JSON well-formedness, `<zeebe:userTask />` and `candidateGroup
 
 ## Deploy gate
 
-Nothing is deployed to cma-showcase-cluster or Vercel until the live-session check is done. When cleared, deploy in this order: form, DMN, BPMN.
+Nothing is deployed to cma-demo-cluster or Vercel until the live-session check is done. When cleared, deploy in this order: form, DMN, BPMN.
