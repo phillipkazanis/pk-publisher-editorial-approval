@@ -1,6 +1,7 @@
 import { camundaRequest, missingCamundaEnv } from '../../../lib/camunda-auth';
 import { articleStats } from '../../../lib/article-stats';
 import { MANAGER, isValidAssignee } from '../../../lib/editors';
+import { parseBannedTerms } from '../../../lib/editor-view';
 
 const EDITOR_GROUP = 'editors';
 const APPROVAL_ELEMENT_ID = 'Task_EditorialApproval';
@@ -60,6 +61,8 @@ export default async function handler(req, res) {
           wordCount: vars.wordCount ?? null,
           rulesVerdict: vars.complianceResult?.verdict || null,
           rulesReason: vars.complianceResult?.reason || null,
+          // The DMN returns only verdict and reason; banned terms are read out of the reason text.
+          bannedTerms: parseBannedTerms(vars.complianceResult?.reason),
           // The compliance agent returns structured JSON; older instances returned plain text.
           aiVerdict: aiJson?.verdict || (typeof ai.responseText === 'string' ? ai.responseText.split('\n')[0].trim() : null),
           aiReasons: strings(aiJson?.reasons),

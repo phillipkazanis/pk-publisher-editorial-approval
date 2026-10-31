@@ -9,6 +9,7 @@
     "smoke": "node --env-file-if-exists=.env.local scripts/smoke-test.mjs",
     "lint:camunda": "node scripts/lint-camunda.mjs",
     "test:stats": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/test-stats.mjs",
+    "test:editor": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/test-editor-view.mjs",
     "test:metrics": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/test-metrics.mjs",
     "fake:camunda": "node scripts/fake-camunda.mjs",
     "api": "node --env-file-if-exists=.env.local scripts/camunda-api.mjs",
