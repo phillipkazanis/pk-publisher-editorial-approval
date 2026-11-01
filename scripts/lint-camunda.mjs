@@ -175,9 +175,14 @@ if (bpmn) {
   const rawBpmn = readFileSync(f, 'utf8');
   const leaked = rawBpmn.match(secretLike);
   if (leaked) report('error', f, `possible literal secret in file (matched "${leaked[0].slice(0, 6)}...")`); // never print more than the prefix
-  for (const n of all(bpmn, 'input')) { // connector secrets should be {{secrets.X}} references
-    if (/(access|secret).*key|password|\btoken\b/i.test(n.attrs.target || '') && n.attrs.source && !/\{\{secrets\.[A-Z0-9_]+\}\}/.test(n.attrs.source)) {
-      report('warn', f, `input "${n.attrs.target}" looks like a credential but is not a {{secrets.X}} reference`);
+  // Connector secrets: the recommended reference is the FEEL expression =camunda.secrets.NAME (Camunda 8.10 docs, "Migrate to camunda.secrets.<name>");
+  // the legacy {{secrets.NAME}} placeholder still works but is flagged. A quoted "camunda.secrets.NAME" is rejected at deployment.
+  for (const n of all(bpmn, 'input')) {
+    const src = n.attrs.source || '';
+    if (/"camunda\.secrets\.[^"]*"/.test(src.replace(/&#34;/g, '"'))) report('error', f, `input "${n.attrs.target}": camunda.secrets.NAME must not be quoted (Camunda rejects it at deployment)`);
+    if (/\{\{secrets\./.test(src)) report('warn', f, `input "${n.attrs.target}" uses the legacy {{secrets.X}} syntax; prefer =camunda.secrets.X`);
+    if (/(access|secret).*key|password|\btoken\b/i.test(n.attrs.target || '') && src && !/\{\{secrets\.[A-Z0-9_]+\}\}|(^=|[^\w."])camunda\.secrets\.[A-Za-z0-9_`-]+/.test(src)) {
+      report('warn', f, `input "${n.attrs.target}" looks like a credential but is not a secret reference`);
     }
   }
 

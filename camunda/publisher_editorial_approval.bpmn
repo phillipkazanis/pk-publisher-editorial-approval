@@ -16,7 +16,7 @@
         <zeebe:ioMapping>
           <zeebe:input source="GET" target="method" />
           <zeebe:input source="https://tjffiscjokrnidqbmhxs.supabase.co/rest/v1/demo_publisher_banned_words?select=word,reason" target="url" />
-          <zeebe:input source="={&#34;apikey&#34;: &#34;{{secrets.PUBLISHER_SUPABASE_KEY}}&#34;, &#34;Authorization&#34;: &#34;Bearer {{secrets.PUBLISHER_SUPABASE_KEY}}&#34;}" target="headers" />
+          <zeebe:input source="={&#34;apikey&#34;: camunda.secrets.PUBLISHER_SUPABASE_KEY, &#34;Authorization&#34;: &#34;Bearer &#34; + camunda.secrets.PUBLISHER_SUPABASE_KEY}" target="headers" />
         </zeebe:ioMapping>
         <zeebe:taskHeaders>
           <zeebe:header key="resultVariable" value="bannedWordsResult" />
@@ -34,7 +34,7 @@
         <zeebe:ioMapping>
           <zeebe:input source="GET" target="method" />
           <zeebe:input source="https://tjffiscjokrnidqbmhxs.supabase.co/rest/v1/demo_publisher_thresholds?select=rule_key,threshold_value" target="url" />
-          <zeebe:input source="={&#34;apikey&#34;: &#34;{{secrets.PUBLISHER_SUPABASE_KEY}}&#34;, &#34;Authorization&#34;: &#34;Bearer {{secrets.PUBLISHER_SUPABASE_KEY}}&#34;}" target="headers" />
+          <zeebe:input source="={&#34;apikey&#34;: camunda.secrets.PUBLISHER_SUPABASE_KEY, &#34;Authorization&#34;: &#34;Bearer &#34; + camunda.secrets.PUBLISHER_SUPABASE_KEY}" target="headers" />
         </zeebe:ioMapping>
         <zeebe:taskHeaders>
           <zeebe:header key="resultVariable" value="thresholdsResult" />
@@ -70,8 +70,8 @@
           <zeebe:input source="bedrock" target="provider.type" />
           <zeebe:input source="ap-southeast-2" target="provider.bedrock.region" />
           <zeebe:input source="credentials" target="provider.bedrock.authentication.type" />
-          <zeebe:input source="{{secrets.BEDROCK_API_ACCESS_KEY}}" target="provider.bedrock.authentication.accessKey" />
-          <zeebe:input source="{{secrets.BEDROCK_API_ACCESS_SECRET}}" target="provider.bedrock.authentication.secretKey" />
+          <zeebe:input source="=camunda.secrets.BEDROCK_API_ACCESS_KEY" target="provider.bedrock.authentication.accessKey" />
+          <zeebe:input source="=camunda.secrets.BEDROCK_API_ACCESS_SECRET" target="provider.bedrock.authentication.secretKey" />
           <zeebe:input source="au.anthropic.claude-sonnet-4-5-20250929-v1:0" target="provider.bedrock.model.model" />
           <zeebe:input source="=0" target="provider.bedrock.model.parameters.temperature" />
           <zeebe:input source="=2000" target="provider.bedrock.model.parameters.maxTokens" />
@@ -110,7 +110,7 @@
           <zeebe:ioMapping>
             <zeebe:input source="GET" target="method" />
             <zeebe:input source="https://tjffiscjokrnidqbmhxs.supabase.co/rest/v1/demo_publisher_banned_words?select=word,reason" target="url" />
-            <zeebe:input source="={&#34;apikey&#34;: &#34;{{secrets.PUBLISHER_SUPABASE_KEY}}&#34;, &#34;Authorization&#34;: &#34;Bearer {{secrets.PUBLISHER_SUPABASE_KEY}}&#34;}" target="headers" />
+            <zeebe:input source="={&#34;apikey&#34;: camunda.secrets.PUBLISHER_SUPABASE_KEY, &#34;Authorization&#34;: &#34;Bearer &#34; + camunda.secrets.PUBLISHER_SUPABASE_KEY}" target="headers" />
           </zeebe:ioMapping>
           <zeebe:taskHeaders>
             <zeebe:header key="resultExpression" value="={toolCallResult: response.body}" />
@@ -125,7 +125,7 @@
           <zeebe:ioMapping>
             <zeebe:input source="GET" target="method" />
             <zeebe:input source="=&#34;https://tjffiscjokrnidqbmhxs.supabase.co/rest/v1/demo_publisher_style_rules?select=rule_key,rule,severity&#38;topic=eq.&#34; + replace(string(fromAi(toolCall.topic, &#34;The style guide topic to look up. One of: headline, attribution, health, sensational, legal, tone.&#34;, &#34;string&#34;)), &#34;[^a-z]&#34;, &#34;&#34;)" target="url" />
-            <zeebe:input source="={&#34;apikey&#34;: &#34;{{secrets.PUBLISHER_SUPABASE_KEY}}&#34;, &#34;Authorization&#34;: &#34;Bearer {{secrets.PUBLISHER_SUPABASE_KEY}}&#34;}" target="headers" />
+            <zeebe:input source="={&#34;apikey&#34;: camunda.secrets.PUBLISHER_SUPABASE_KEY, &#34;Authorization&#34;: &#34;Bearer &#34; + camunda.secrets.PUBLISHER_SUPABASE_KEY}" target="headers" />
           </zeebe:ioMapping>
           <zeebe:taskHeaders>
             <zeebe:header key="resultExpression" value="={toolCallResult: response.body}" />
