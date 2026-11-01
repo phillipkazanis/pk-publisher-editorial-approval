@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_PublisherEditorialApproval" targetNamespace="http://camunda.org/examples" exporter="Camunda Web Modeler" exporterVersion="f127538" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.10.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_PublisherEditorialApproval" targetNamespace="http://camunda.org/examples" exporter="Camunda Web Modeler" exporterVersion="aa92d9c" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.10.0">
   <bpmn:message id="Message_PublisherResubmitted" name="publisher-approval-resubmitted">
     <bpmn:extensionElements>
       <zeebe:subscription correlationKey="=submissionId" />
@@ -233,7 +233,7 @@
       <bpmn:incoming>Flow_RevisionTimeout</bpmn:incoming>
       <bpmn:outgoing>Flow_TimeoutAbandon</bpmn:outgoing>
       <bpmn:timerEventDefinition id="TimerDef_RevisionTimeout">
-        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">=if revisionTimeout != null then revisionTimeout else "PT24H"</bpmn:timeDuration>
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">=if revisionTimeout != null then revisionTimeout else "PT1M"</bpmn:timeDuration>
       </bpmn:timerEventDefinition>
     </bpmn:intermediateCatchEvent>
     <bpmn:sequenceFlow id="Flow_TimeoutAbandon" sourceRef="Event_RevisionTimeout" targetRef="Task_MarkAbandoned" />
@@ -278,34 +278,34 @@
           <dc:Bounds x="678" y="191" width="73" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_NotifySubmitter_di" bpmnElement="Task_NotifySubmitter">
-        <dc:Bounds x="1140" y="402" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Gateway_Revision_di" bpmnElement="Gateway_Revision">
-        <dc:Bounds x="1290" y="417" width="50" height="50" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="1280" y="467" width="71" height="40" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_Resubmitted_di" bpmnElement="Event_Resubmitted">
-        <dc:Bounds x="1390" y="424" width="36" height="36" />
+        <dc:Bounds x="1297" y="552" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1373" y="386.5" width="70" height="27" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_RevisionTimeout_di" bpmnElement="Event_RevisionTimeout">
-        <dc:Bounds x="1297" y="372" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="1274" y="334.5" width="82" height="27" />
+          <dc:Bounds x="1217" y="556.5" width="70" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Task_MarkAbandoned_di" bpmnElement="Task_MarkAbandoned">
-        <dc:Bounds x="1450" y="350" width="100" height="80" />
+        <dc:Bounds x="1490" y="400" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotifySubmitter_di" bpmnElement="Task_NotifySubmitter">
+        <dc:Bounds x="1140" y="400" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Revision_di" bpmnElement="Gateway_Revision">
+        <dc:Bounds x="1290" y="415" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1279.5" y="365" width="71" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_RevisionTimeout_di" bpmnElement="Event_RevisionTimeout">
+        <dc:Bounds x="1422" y="422" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1399" y="385" width="82" height="27" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="End_Abandoned_di" bpmnElement="End_Abandoned">
-        <dc:Bounds x="1600" y="372" width="36" height="36" />
+        <dc:Bounds x="1640" y="422" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1590" y="408" width="57" height="14" />
+          <dc:Bounds x="1630" y="458" width="57" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Agent_ComplianceReview_di" bpmnElement="Agent_ComplianceReview" isExpanded="true">
@@ -360,10 +360,10 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_RulesPassed_No_di" bpmnElement="Flow_RulesPassed_No">
         <di:waypoint x="715" y="265" />
-        <di:waypoint x="715" y="442" />
-        <di:waypoint x="1140" y="442" />
+        <di:waypoint x="715" y="440" />
+        <di:waypoint x="1140" y="440" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="916" y="417" width="23" height="14" />
+          <dc:Bounds x="916" y="415" width="23" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_AI_di" bpmnElement="Flow_AI">
@@ -376,9 +376,9 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_AIPassed_No_di" bpmnElement="Flow_AIPassed_No">
         <di:waypoint x="1185" y="265" />
-        <di:waypoint x="1185" y="402" />
+        <di:waypoint x="1185" y="400" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1175" y="370" width="23" height="14" />
+          <dc:Bounds x="1175" y="368" width="23" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_Approval_di" bpmnElement="Flow_Approval">
@@ -393,7 +393,7 @@
         <di:waypoint x="1425" y="265" />
         <di:waypoint x="1425" y="320" />
         <di:waypoint x="1220" y="320" />
-        <di:waypoint x="1220" y="402" />
+        <di:waypoint x="1220" y="400" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="1301" y="295" width="43" height="14" />
         </bpmndi:BPMNLabel>
@@ -402,34 +402,34 @@
         <di:waypoint x="1590" y="240" />
         <di:waypoint x="1640" y="240" />
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_NotifyToGateway_di" bpmnElement="Flow_NotifyToGateway">
+        <di:waypoint x="1240" y="440" />
+        <di:waypoint x="1290" y="440" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Resubmitted_di" bpmnElement="Flow_Resubmitted">
+        <di:waypoint x="1315" y="465" />
+        <di:waypoint x="1315" y="552" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_Resubmitted_Loop_di" bpmnElement="Flow_Resubmitted_Loop">
-        <di:waypoint x="1408" y="460" />
-        <di:waypoint x="1408" y="630" />
+        <di:waypoint x="1315" y="588" />
+        <di:waypoint x="1315" y="630" />
         <di:waypoint x="290" y="630" />
         <di:waypoint x="290" y="280" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="805" y="605" width="88" height="27" />
+          <dc:Bounds x="759" y="605" width="88" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_NotifyToGateway_di" bpmnElement="Flow_NotifyToGateway">
-        <di:waypoint x="1240" y="442" />
-        <di:waypoint x="1290" y="442" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_Resubmitted_di" bpmnElement="Flow_Resubmitted">
-        <di:waypoint x="1340" y="442" />
-        <di:waypoint x="1390" y="442" />
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_RevisionTimeout_di" bpmnElement="Flow_RevisionTimeout">
-        <di:waypoint x="1315" y="417" />
-        <di:waypoint x="1315" y="408" />
+        <di:waypoint x="1340" y="440" />
+        <di:waypoint x="1422" y="440" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_TimeoutAbandon_di" bpmnElement="Flow_TimeoutAbandon">
-        <di:waypoint x="1333" y="390" />
-        <di:waypoint x="1450" y="390" />
+        <di:waypoint x="1458" y="440" />
+        <di:waypoint x="1490" y="440" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_AbandonedEnd_di" bpmnElement="Flow_AbandonedEnd">
-        <di:waypoint x="1550" y="390" />
-        <di:waypoint x="1600" y="390" />
+        <di:waypoint x="1590" y="440" />
+        <di:waypoint x="1640" y="440" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

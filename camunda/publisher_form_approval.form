@@ -3,7 +3,7 @@
   "executionPlatformVersion": "8.10.0",
   "exporter": {
     "name": "Camunda Web Modeler",
-    "version": "f127538"
+    "version": "aa92d9c"
   },
   "schemaVersion": 16,
   "id": "publisher_form_approval",
