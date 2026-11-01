@@ -1,7 +1,7 @@
 // Starts or resubmits an article straight through the Camunda REST API, secured with an OAuth 2.0
 // client-credentials token. This is the "start by API call" path from the PoC brief, with no UI or app route in between.
 //
-//   npm run api -- start --title "SMOKE TEST - API start" --body-file article.txt [--email who@example.com] [--writer "Alex Rivera"] [--revision-timeout PT2M] [--submission-id <id>]
+//   npm run api -- start --title "Your headline" --body-file article.txt [--email who@example.com] [--writer "Alex Rivera"] [--revision-timeout PT2M] [--submission-id <id>]
 //   npm run api -- resubmit <submissionId> --title "..." --body-file revised.txt
 //   npm run api -- assign <userTaskKey> --to alice      (reassign an approval task; Tasklist cannot assign to another user)
 //

@@ -96,9 +96,9 @@ Open http://localhost:3000/tasks to see five seeded tasks (view as `john` or `al
 To start or resubmit through the Camunda REST API with an OAuth 2.0 client-credentials token (no UI or app route involved):
 
 ```
-npm run api -- start --title "SMOKE TEST - API start" --body-file docs/samples/clean-article.txt
-npm run api -- start --title "SMOKE TEST - timeout" --body-file docs/samples/revision-article.txt --revision-timeout PT2M
-npm run api -- resubmit <submissionId> --title "SMOKE TEST - API start" --body-file docs/samples/clean-article.txt
+npm run api -- start --title "Council approves nine million dollar cycling network linking suburbs to the city" --body-file docs/samples/clean-article.txt
+npm run api -- start --title "Council backs new cycling network as councillor promises household savings" --body-file docs/samples/revision-article.txt --revision-timeout PT2M
+npm run api -- resubmit <submissionId> --title "Council approves nine million dollar cycling network linking suburbs to the city" --body-file docs/samples/clean-article.txt
 ```
 
 Add `--writer "Priya Nair"` to start it as a simulated writer. Reassign an approval task with `npm run api -- assign <userTaskKey> --to alice` (Tasklist cannot assign a task to another user; the Editor tasks page has the same control, with the names from `lib/editors.js`).

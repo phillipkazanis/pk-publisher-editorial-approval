@@ -32,7 +32,7 @@ Their stated priorities, in order: **statefulness and human-in-the-loop** (funct
 ### 1. Statefulness (about 15 minutes)
 
 **Normal path (S1).**
-1. **Start by API secured with OAuth 2.0 client credentials:** `npm run api -- start --title "SMOKE TEST - API start" --body-file docs/samples/clean-article.txt`. Point at the three steps it prints: the token request (`client_credentials`), the start call with a redacted bearer token, the instance key. Show the instance in Operate. (The Submit form uses the same token server-side.) Start it early and narrate while the agent runs.
+1. **Start by API secured with OAuth 2.0 client credentials:** `npm run api -- start --title "Council approves nine million dollar cycling network linking suburbs to the city" --body-file docs/samples/clean-article.txt`. Point at the three steps it prints: the token request (`client_credentials`), the start call with a redacted bearer token, the instance key. Show the instance in Operate. (The Submit form uses the same token server-side.) Start it early and narrate while the agent runs.
 2. Walk it in Operate: the reference-data lookups, the DMN rules, then the compliance agent.
 3. Switch to the pre-seeded instance waiting at **editor approval**. It has been waiting; nothing is holding a thread or a connection. That is the point.
 4. After approval, the publish fails once (mock HTTP 500). Show the retry with backoff in Operate, then success. Say: the retry is configuration on the step, not code.
