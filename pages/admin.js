@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { reasonPreview } from '../lib/reason';
+import { getOptimizeDashboardUrl } from '../lib/config';
 import styles from '../styles/App.module.css';
 
 const REFRESH_MS = 5000;
@@ -34,6 +35,7 @@ function when(iso) {
 }
 
 export default function Admin() {
+  const optimizeUrl = getOptimizeDashboardUrl();
   const [rows, setRows] = useState(null);
   const [metrics, setMetrics] = useState(null);
   const [error, setError] = useState('');
@@ -66,6 +68,20 @@ export default function Admin() {
       <p className={styles.intro}>
         Recent submissions and their status. For the step-by-step history, variables and AI input and output of an instance, open it in Camunda Operate.
       </p>
+
+
+      {optimizeUrl && (
+        <section className={styles.card} aria-labelledby="process-analytics-title">
+          <h2 id="process-analytics-title" className={styles.cardTitle}>Process analytics</h2>
+          <p className={styles.cardHint}>
+            Live and historical view of the editorial approval process: work in flight, outcomes, where time goes, AI usage and the audit log.
+          </p>
+          <a className={`${styles.btnPrimary} ${styles.btnLink}`} href={optimizeUrl} target="_blank" rel="noopener noreferrer">
+            Open Optimize dashboard<span className={styles.srOnly}> (opens in a new tab)</span>
+          </a>
+          <p className={styles.linkHint}>Opens in Camunda Optimize. Sign in with your Camunda account if prompted.</p>
+        </section>
+      )}
 
       {error && (
         <p className={styles.notice} role="alert">

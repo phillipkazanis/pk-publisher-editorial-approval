@@ -72,6 +72,7 @@ Their stated priorities, in order: **statefulness and human-in-the-loop** (funct
 ### 5. The business view and audit trail (about 3 minutes)
 1. Open the **completed** instance in Operate: every step, start and end time, the decisions as variables (`complianceResult`, `aiComplianceResult`, `approvalDecision`, `revisionReason`), and the agent's conversation and tool calls. **Verify on the cluster that the real approver appears**, and say plainly which fields come from the system rather than a person.
 2. Open **Admin**: the KPI strip (first-pass rate, average revision rounds, median time to publish, publish retries, abandonment). Because state lives in the process, these are measurable. Be clear they are calculated from the app's record; Operate is the system of record.
+3. Analytics: Admin page, Open Optimize dashboard. Use it at the end of the demo to show the process data and audit trail.
 
 ## Close (1 minute)
 Tie back to their capability table: durable state, pause and resume, loop-back in one instance, retry, human-in-the-loop, AI as a governed step with audit, start by API. Then the three business points: one history per article, running work is not disturbed by change, AI sits behind a contract your own team can own.

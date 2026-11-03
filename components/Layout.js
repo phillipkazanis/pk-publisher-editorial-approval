@@ -2,11 +2,14 @@ import { useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { getOptimizeDashboardUrl } from '../lib/config';
 import styles from '../styles/App.module.css';
 
 // Branding is configured per environment and is not stored in the repo (see .env.example).
 const BRAND_NAME = process.env.NEXT_PUBLIC_BRAND_NAME || 'Editorial Console';
 const BRAND_LOGO = process.env.NEXT_PUBLIC_BRAND_LOGO || '';
+
+const OPTIMIZE_URL = getOptimizeDashboardUrl();
 
 const NAV = [
   { href: '/', label: 'Submit' },
@@ -51,6 +54,11 @@ export default function Layout({ title, children }) {
               {item.label}
             </Link>
           ))}
+          {OPTIMIZE_URL && (
+            <a className={`${styles.navLink} ${styles.navLinkExternal}`} href={OPTIMIZE_URL} target="_blank" rel="noopener noreferrer">
+              Analytics<span className={styles.srOnly}> (opens in a new tab)</span>
+            </a>
+          )}
         </div>
       </nav>
 
