@@ -80,6 +80,14 @@
 .navLink:hover {
   color: var(--text);
 }
+.navLink:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.navLinkExternal {
+  margin-left: auto;
+  font-weight: 500;
+}
 .navLinkActive {
   color: var(--accent-dark);
   border-bottom-color: var(--accent);
@@ -340,7 +348,8 @@
 .input:focus,
 .textarea:focus,
 .btnPrimary:focus-visible,
-.btnSecondary:focus-visible {
+.btnSecondary:focus-visible,
+.btnLink:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
@@ -369,6 +378,17 @@
 }
 .btnSecondary:hover {
   background: #eef2fd;
+}
+.btnLink {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  text-decoration: none;
+}
+.linkHint {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--muted);
 }
 .statusMessage {
   margin: 0;
