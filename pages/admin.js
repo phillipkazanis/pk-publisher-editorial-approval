@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { reasonPreview } from '../lib/reason';
-import { getOptimizeDashboardUrl } from '../lib/config';
+import { getAiAnalyticsUrl, getOptimizeDashboardUrl } from '../lib/config';
 import styles from '../styles/App.module.css';
 
 const REFRESH_MS = 5000;
@@ -36,6 +36,8 @@ function when(iso) {
 
 export default function Admin() {
   const optimizeUrl = getOptimizeDashboardUrl();
+  const aiUrl = getAiAnalyticsUrl();
+  const showInsights = Boolean(optimizeUrl || aiUrl);
   const [rows, setRows] = useState(null);
   const [metrics, setMetrics] = useState(null);
   const [error, setError] = useState('');
@@ -70,16 +72,25 @@ export default function Admin() {
       </p>
 
 
-      {optimizeUrl && (
-        <section className={styles.card} aria-labelledby="process-analytics-title">
-          <h2 id="process-analytics-title" className={styles.cardTitle}>Process analytics</h2>
+      {showInsights && (
+        <section className={styles.card} aria-labelledby="process-insights-title">
+          <h2 id="process-insights-title" className={styles.cardTitle}>Process insights</h2>
           <p className={styles.cardHint}>
-            Live and historical view of the editorial approval process: work in flight, outcomes, where time goes, AI usage and the audit log.
+            See how editorial approval is performing: work in flight, outcomes, where time goes, how AI is used and the full audit trail.
           </p>
-          <a className={`${styles.btnPrimary} ${styles.btnLink}`} href={optimizeUrl} target="_blank" rel="noopener noreferrer">
-            Open Optimize dashboard<span className={styles.srOnly}> (opens in a new tab)</span>
-          </a>
-          <p className={styles.linkHint}>Opens in Camunda Optimize. Sign in with your Camunda account if prompted.</p>
+          <div className={styles.linkRow}>
+            {optimizeUrl && (
+              <a className={`${styles.btnPrimary} ${styles.btnLink}`} href={optimizeUrl} target="_blank" rel="noopener noreferrer">
+                View process performance<span className={styles.srOnly}> (opens in a new tab)</span>
+              </a>
+            )}
+            {aiUrl && (
+              <a className={`${optimizeUrl ? styles.btnSecondary : styles.btnPrimary} ${styles.btnLink}`} href={aiUrl} target="_blank" rel="noopener noreferrer">
+                View AI activity and oversight<span className={styles.srOnly}> (opens in a new tab)</span>
+              </a>
+            )}
+          </div>
+          <p className={styles.linkHint}>Opens in a new tab. Sign in with your Camunda account if prompted.</p>
         </section>
       )}
 

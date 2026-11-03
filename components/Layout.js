@@ -56,7 +56,7 @@ export default function Layout({ title, children }) {
           ))}
           {OPTIMIZE_URL && (
             <a className={`${styles.navLink} ${styles.navLinkExternal}`} href={OPTIMIZE_URL} target="_blank" rel="noopener noreferrer">
-              Analytics<span className={styles.srOnly}> (opens in a new tab)</span>
+              Insights<span className={styles.srOnly}> (opens in a new tab)</span>
             </a>
           )}
         </div>

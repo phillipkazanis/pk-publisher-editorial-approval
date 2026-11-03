@@ -385,6 +385,11 @@
   box-sizing: border-box;
   text-decoration: none;
 }
+.linkRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
 .linkHint {
   margin: 8px 0 0;
   font-size: 13px;
